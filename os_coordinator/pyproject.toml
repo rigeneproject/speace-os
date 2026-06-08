@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "os-coordinator"
-version = "0.1.0-cos"
+version = "0.1.0a1"
 description = "PID 1 cognitivo del sistema operativo SPEACE OS"
 readme = "README.md"
 license = {text = "MIT"}

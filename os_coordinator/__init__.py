@@ -8,4 +8,4 @@ l'intero sistema operativo usando un agentic AI (minimax-m3:cloud via
 Ollama Cloud) come decisore di alto livello.
 """
 
-__version__ = "0.1.0-cos"
+__version__ = "0.1.0a1"
