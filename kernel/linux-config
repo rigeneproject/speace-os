@@ -40,6 +40,21 @@ CONFIG_VT_CONSOLE=y
 CONFIG_SERIAL_8250=y
 CONFIG_SERIAL_8250_CONSOLE=y
 
+# Bus support
+CONFIG_PCI=y
+CONFIG_PCI_MSI=y
+
+# Executable file formats
+CONFIG_BINFMT_ELF=y
+CONFIG_BINFMT_SCRIPT=y
+
+# SCSI subsystem (necessario per sd* e sr* device)
+CONFIG_SCSI=y
+CONFIG_BLK_DEV_SD=y      # /dev/sda, /dev/sdb etc.
+CONFIG_BLK_DEV_SR=y      # /dev/sr0 (CD-ROM)
+CONFIG_SR_DEV_IOCTL=y
+CONFIG_CHR_DEV_SG=y
+
 # Driver base (no GPU, no wireless, no bluetooth, no sound)
 CONFIG_ATA=y
 CONFIG_ATA_GENERIC=y
@@ -48,6 +63,25 @@ CONFIG_SATA_AHCI=y
 CONFIG_E1000=y
 CONFIG_E1000E=y
 CONFIG_R8169=y
+
+# USB storage (per boot da chiavetta USB)
+CONFIG_USB=y
+CONFIG_USB_SUPPORT=y
+CONFIG_USB_XHCI_HCD=y    # USB 3.0
+CONFIG_USB_EHCI_HCD=y    # USB 2.0
+CONFIG_USB_OHCI_HCD=y    # USB 1.1 (fallback)
+CONFIG_USB_STORAGE=y     # USB mass storage
+
+# VirtIO (per QEMU/KVM)
+CONFIG_VIRTIO=y
+CONFIG_VIRTIO_PCI=y
+CONFIG_VIRTIO_BLK=y
+CONFIG_VIRTIO_CONSOLE=y
+CONFIG_VIRTIO_NET=y
+
+# TTY / console
+CONFIG_UNIX98_PTYS=y
+CONFIG_DEVPTS_MULTIPLE_INSTANCES=y
 
 # Initramfs / boot
 CONFIG_BLK_DEV_INITRD=y

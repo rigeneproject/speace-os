@@ -1,19 +1,16 @@
 #!/bin/sh
 # init — primo programma eseguito dal kernel (PID 1 del initramfs).
-# Deve essere uno script POSIX. Nella SPEACE OS, questo init fa solo
-# il bootstrap minimo: monta proc/sys/dev, esegue pivot_root al
-# rootfs reale, e lascia che os_coordinator (anch'esso PID 1 ma
-# adesso sotto il nuovo root) continui il ciclo di vita.
-
-# Nella nostra architettura, os_coordinator è il PID 1 nel rootfs
-# finale. Questo init nell'initramfs si limita a consegnare il
-# controllo al vero PID 1.
+# Il kernel carica initramfs in RAMFS, esegue questo script come PID 1.
+# Compito: montare proc/sys/dev, trovare e montare il rootfs reale,
+# fare pivot_root, e passare il controllo a /sbin/os_coordinator.
 
 set -eu
 
+# Apre la console per output kernel (se non già aperta)
+exec < /dev/console > /dev/console 2>&1
+
 echo "=================================================="
 echo " SPEACE OS — initramfs init"
-echo " $(date)"
 echo "=================================================="
 
 # Monta i filesystem virtuali essenziali
@@ -21,52 +18,78 @@ mount -t proc none /proc || true
 mount -t sysfs none /sys || true
 mount -t devtmpfs none /dev || true
 mount -t tmpfs none /run || true
-mount -t tmpfs none /tmp || true
 
-# Cerca il rootfs reale. Convenzione: secondo parametro del kernel
-# (root=...) oppure /dev/sr0 (ISO) o /dev/vda (QCOW2).
-ROOT_DEVICE="${ROOT_DEVICE:-/dev/sr0}"
-if [ ! -b "${ROOT_DEVICE}" ]; then
-    ROOT_DEVICE="/dev/vda"
+# Popola /dev minimale (se devtmpfs non basta)
+if [ ! -e /dev/console ]; then
+    mknod /dev/console c 5 1 2>/dev/null || true
 fi
-if [ ! -b "${ROOT_DEVICE}" ]; then
-    ROOT_DEVICE="/dev/sda"
+
+# Cerca il rootfs reale. Ordine di fallback:
+#   1. root= parametro kernel (es. root=/dev/sda2)
+#   2. /dev/sr0 (CDROM / ISO)
+#   3. /dev/vda (virtio)
+#   4. /dev/sda (USB / SATA)
+ROOT_DEVICE="${ROOT_DEVICE:-}"
+if [ -z "${ROOT_DEVICE}" ]; then
+    for candidate in /dev/sr0 /dev/vda /dev/sda /dev/sdb /dev/nvme0n1; do
+        if [ -b "${candidate}" ]; then
+            ROOT_DEVICE="${candidate}"
+            break
+        fi
+    done
 fi
 
 echo "[init] rootfs candidate: ${ROOT_DEVICE}"
 
-# Attendi che il device sia pronto (max 5s)
-for i in 1 2 3 4 5; do
+# Attendi che il device sia pronto (max 10s)
+for i in 1 2 3 4 5 6 7 8 9 10; do
     if [ -b "${ROOT_DEVICE}" ]; then
         break
     fi
-    echo "[init] aspetto ${ROOT_DEVICE}... (${i}/5)"
+    echo "[init] aspetto ${ROOT_DEVICE}... (${i}/10)"
     sleep 1
 done
+
+if [ ! -b "${ROOT_DEVICE}" ]; then
+    echo "[init] ERRORE: ${ROOT_DEVICE} non trovato dopo 10s"
+    echo "[init] Dispositivi disponibili:"
+    (ls /dev/sd* /dev/vd* /dev/sr* /dev/nvme* 2>/dev/null || echo "nessuno")
+    echo "[init] cado in shell per debug"
+    exec /bin/sh
+fi
 
 mkdir -p /newroot
 if mount -o ro "${ROOT_DEVICE}" /newroot 2>/dev/null; then
     echo "[init] montato ${ROOT_DEVICE} in /newroot"
 else
-    echo "[init] WARN: impossibile montare ${ROOT_DEVICE}, resto in initramfs"
+    echo "[init] ERRORE: impossibile montare ${ROOT_DEVICE}"
+    echo "[init] cado in shell per debug"
     exec /bin/sh
 fi
 
-# Prepara pivot_root
+# Sposta i filesystem virtuali nel nuovo root prima del pivot
+# così il nuovo root li ha subito disponibili
+mount --move /dev /newroot/dev 2>/dev/null || true
+mount --move /proc /newroot/proc 2>/dev/null || true
+mount --move /sys /newroot/sys 2>/dev/null || true
+mount --move /run /newroot/run 2>/dev/null || true
+
+# Prepara pivot_root (percorsi assoluti per sicurezza)
+mkdir -p /newroot/oldroot
 cd /newroot
-mkdir -p oldroot
-pivot_root . oldroot
+pivot_root /newroot /newroot/oldroot
 
-# Smonta i filesystem di boot
-umount /oldroot/proc /oldroot/sys /oldroot/dev /oldroot/run /oldroot/tmp 2>/dev/null || true
+# Smonta i residui dell'initramfs (ormai in /oldroot)
+umount -l /oldroot/dev /oldroot/proc /oldroot/sys /oldroot/run 2>/dev/null || true
 
-# Esegui il vero init: os_coordinator. Se manca, logga e cadi in shell
-# di soccorso invece di panicare (utile per debug in QEMU smoke test).
+# Esegui il vero init: os_coordinator. Se manca, shell di soccorso.
 if [ -x /sbin/os_coordinator ]; then
     echo "[init] consegno il controllo a /sbin/os_coordinator (PID 1 cognitivo)"
     exec /sbin/os_coordinator
 else
-    echo "[init] WARN: /sbin/os_coordinator non trovato o non eseguibile"
-    echo "[init]cado in /bin/sh per debug. Controlla rootfs/etc/speace/."
+    echo "[init] WARN: /sbin/os_coordinator non trovato nel rootfs"
+    echo "[init] Contenuto di /sbin:"
+    ls /sbin/ 2>/dev/null || echo "(vuoto)"
+    echo "[init] cado in shell per debug"
     exec /bin/sh
 fi

@@ -35,8 +35,9 @@ if [ -r "${ENV_FILE}" ]; then
     set +a
 fi
 
-# 2) Costruisci PYTHONPATH per trovare os_coordinatore in /opt
-export PYTHONPATH="${PYTHONPATH:-}:${SPEACE_ROOT}"
+# 2) Costruisci PYTHONPATH per trovare os_coordinatore
+#     cerca in /opt (initramfs fallback) e /opt/speace (rootfs fallback)
+export PYTHONPATH="${PYTHONPATH:-}:${SPEACE_ROOT}:/opt/speace"
 
 # 3) Trova un interprete python3
 PYBIN=""
