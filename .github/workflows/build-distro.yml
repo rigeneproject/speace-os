@@ -58,7 +58,7 @@ jobs:
       - name: Run os_coordinator tests
         working-directory: os_coordinator
         run: |
-          python -m pytest tests/ -v --tb=short
+          python -m pytest src/tests/ -v --tb=short
 
       - name: Status snapshot (offline mode)
         working-directory: os_coordinator

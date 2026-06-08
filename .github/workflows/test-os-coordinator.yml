@@ -41,7 +41,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: os_coordinator
         run: |
-          python -m pytest tests/ -v --tb=short --cov=os_coordinator --cov-report=term-missing --cov-report=xml
+          python -m pytest src/tests/ -v --tb=short --cov=os_coordinator --cov-report=term-missing --cov-report=xml
 
       - name: Lint (ruff, se disponibile)
         working-directory: os_coordinator
@@ -53,7 +53,7 @@ jobs:
         working-directory: os_coordinator
         run: |
           pip install mypy types-PyYAML
-          mypy os_coordinator/ --ignore-missing-imports || echo "(warn) mypy ha segnalazioni, non blocca"
+          mypy src/os_coordinator/ --ignore-missing-imports || echo "(warn) mypy ha segnalazioni, non blocca"
 
       - name: Upload coverage
         if: matrix.python-version == '3.12'
