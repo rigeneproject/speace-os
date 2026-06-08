@@ -113,6 +113,52 @@ else
     echo "  [SKIP] out/initramfs.cpio.gz non ancora generato (test opzionale)"
 fi
 
+# 5. pack-usb-img.sh presente, eseguibile, integro
+USBIMG="${ROOT}/iso/pack-usb-img.sh"
+if [ -f "${USBIMG}" ]; then
+    ok "pack-usb-img.sh presente"
+    if [ -x "${USBIMG}" ]; then
+        ok "pack-usb-img.sh eseguibile (+x)"
+    else
+        fail "pack-usb-img.sh NON eseguibile (manca +x)"
+    fi
+    if grep -q "parted" "${USBIMG}"; then
+        ok "pack-usb-img.sh usa parted (GPT)"
+    else
+        fail "pack-usb-img.sh non usa parted"
+    fi
+    if grep -q "EFI" "${USBIMG}"; then
+        ok "pack-usb-img.sh prepara partizione EFI"
+    else
+        fail "pack-usb-img.sh non prepara EFI"
+    fi
+else
+    fail "pack-usb-img.sh mancante: ${USBIMG}"
+fi
+
+# 6. Verifica .img se esiste
+IMGFILE="${ROOT}/out/speace-os-$(cat "${ROOT}/VERSION" 2>/dev/null).img"
+if [ -f "${IMGFILE}" ]; then
+    SIZE=$(stat -c%s "${IMGFILE}" 2>/dev/null || stat -f%z "${IMGFILE}" 2>/dev/null)
+    if [ "${SIZE}" -gt 104857600 ]; then  # > 100MB
+        ok ".img size ok: $(echo "${SIZE}" | awk '{printf "%.1f MB", $1/1024/1024}')"
+    else
+        fail ".img troppo piccolo: ${SIZE} bytes"
+    fi
+    if head -c 8 "${IMGFILE}" | od -An -c | grep -q "EFI"; then
+        ok ".img ha GPT signature (protective MBR)"
+    else
+        # GPT inizia con 'EFI PART' al sector 1
+        if dd if="${IMGFILE}" bs=1 skip=512 count=8 2>/dev/null | grep -q "EFI PART"; then
+            ok ".img ha GPT header (EFI PART)"
+        else
+            fail ".img non ha GPT valido (no protective MBR, no GPT header)"
+        fi
+    fi
+else
+    echo "  [SKIP] .img non ancora generato (test opzionale)"
+fi
+
 echo
 echo "=== Risultato: ${PASS} pass, ${FAIL} fail ==="
 if [ "${FAIL}" -gt 0 ]; then

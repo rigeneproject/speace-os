@@ -89,7 +89,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [iso, qcow2, rootfs]
+        target: [iso, qcow2, rootfs, usb]
     steps:
       - uses: actions/checkout@v4
 
@@ -104,7 +104,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential bc bison flex libelf-dev libssl-dev \
             curl wget cpio gzip rsync xorriso grub-pc-bin grub-efi-amd64-bin \
-            qemu-utils mtools dosfstools libguestfs-tools e2fsprogs
+            qemu-utils mtools dosfstools libguestfs-tools e2fsprogs parted
 
       - name: Determine version
         id: ver
@@ -112,7 +112,7 @@ jobs:
 
       - name: "Build (matrix target: ${{ matrix.target }})"
         run: |
-          chmod +x iso/build.sh iso/pack-iso.sh iso/pack-qcow2.sh iso/pack-rootfs.sh kernel/build-kernel.sh
+          chmod +x iso/build.sh iso/pack-iso.sh iso/pack-qcow2.sh iso/pack-rootfs.sh iso/pack-usb-img.sh kernel/build-kernel.sh
           chmod +x iso/tests/test-initramfs-wiring.sh
           case "${{ matrix.target }}" in
             rootfs)
@@ -133,6 +133,13 @@ jobs:
               sudo chown -R "$(id -u):$(id -g)" out/ || true
               ./iso/pack-qcow2.sh
               ;;
+            usb)
+              sudo ./iso/build.sh
+              sudo chown -R "$(id -u):$(id -g)" out/ || true
+              sudo ./iso/pack-usb-img.sh
+              # Verifica wiring end-to-end anche per .img
+              sh iso/tests/test-initramfs-wiring.sh
+              ;;
           esac
 
       - name: List out/
@@ -145,6 +152,7 @@ jobs:
           path: |
             out/speace-os-*.iso
             out/speace-os-*.qcow2
+            out/speace-os-*.img
             out/rootfs.tar.gz
           if-no-files-found: warn
 
@@ -230,6 +238,7 @@ jobs:
           files: |
             release/**/*.iso
             release/**/*.qcow2
+            release/**/*.img
             release/**/*.tar.gz
             release/**/rootfs.tar.gz
           draft: false
