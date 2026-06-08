@@ -92,7 +92,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential bc bison flex libelf-dev libssl-dev \
             curl wget cpio gzip rsync xorriso grub-pc-bin grub-efi-amd64-bin \
-            qemu-utils mtools dosfstools
+            qemu-utils mtools dosfstools libguestfs-tools e2fsprogs
 
       - name: Determine version
         id: ver
