@@ -85,7 +85,7 @@ sudo ./iso/build.sh
 | Servizi | `rootfs/etc/speace/services/<name>/run` | 4 servizi canonici (brain, evolution, agi-team, dashboard) |
 | Initramfs | `initramfs/init` | Bootstrap minimo: monta rootfs, lancia `os_coordinator` |
 | Build pipeline | `iso/build.sh` + 4 script | Kernel + rootfs + initramfs + ISO + QCOW2 |
-| CI | `ci/github-actions/*.yml` | 3 workflow: build-distro, test, publish-release |
+| CI | `.github/workflows/*.yml` | 3 workflow: build-distro, test, publish-release |
 
 ## Documentazione
 
