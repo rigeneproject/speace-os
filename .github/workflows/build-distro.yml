@@ -99,7 +99,7 @@ jobs:
         id: ver
         run: echo "v=$(cat VERSION)" >> "$GITHUB_OUTPUT"
 
-      - name: Build (matrix target: ${{ matrix.target }})
+      - name: "Build (matrix target: ${{ matrix.target }})"
         run: |
           chmod +x iso/build.sh iso/pack-iso.sh iso/pack-qcow2.sh iso/pack-rootfs.sh kernel/build-kernel.sh
           case "${{ matrix.target }}" in
