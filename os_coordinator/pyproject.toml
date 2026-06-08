@@ -38,9 +38,11 @@ dev = [
 speace-os-coordinator = "os_coordinator.__main__:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["os_coordinator"]
+# Standard "src layout": package lives in src/os_coordinator/.
+# Hatchling's default `packages` auto-detection finds it correctly.
+packages = ["src/os_coordinator"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["src/tests"]
 addopts = "-v"
