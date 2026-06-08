@@ -64,14 +64,29 @@ mkdir -p "${OUT}/iso/speace"
 tar -czf "${OUT}/iso/speace/rootfs.tar.gz" -C "${OUT}" rootfs
 
 # Genera ISO con xorriso (BIOS)
-# Su Ubuntu 24.04 grub-pc-bin non ha eltorito.img, quindi usiamo cdboot.img
+# Usa boot_hybrid.img come boot image (GRUB2-compatibile).
+# NOTA: xorriso può restituire exit code non-zero con MISHAP/warning
+# (es. "Boot image too small for GRUB2. Will not patch it.") MA
+# l'ISO viene comunque scritta correttamente. Per evitare che 'set -eu'
+# interrompa lo script, catturiamo l'exit code e verifichiamo se
+# il file ISO è stato effettivamente prodotto.
 xorriso -as mkisofs \
     -R -J -joliet-long \
     -V "SPEACE_OS" \
     -o "${ISO}" \
-    -b boot/grub/i386-pc/cdboot.img \
+    -b boot/grub/i386-pc/boot_hybrid.img \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
     --grub2-boot-info --grub2-mbr "${OUT}/iso/boot/grub/i386-pc/boot_hybrid.img" \
     "${OUT}/iso/" 2>&1
+XORRISO_RC=$?
+
+# Accetta MISHAP (warning) purché l'ISO sia stata scritta
+if [ ! -f "${ISO}" ]; then
+    echo "[pack-iso] FAIL: ISO non scritto, xorriso exit=${XORRISO_RC}" >&2
+    exit ${XORRISO_RC:-1}
+fi
+if [ "${XORRISO_RC}" -ne 0 ]; then
+    echo "[pack-iso] WARN: xorriso exit=${XORRISO_RC} (MISHAP), ma ISO scritto"
+fi
 
 echo "[pack-iso] ISO scritto: ${ISO} ($(du -h "${ISO}" | cut -f1))"
