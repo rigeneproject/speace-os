@@ -70,9 +70,21 @@ jobs:
           name: os-coordinator-status
           path: os_coordinator/status.json
 
+  test-initramfs-wiring:
+    name: Test initramfs wiring
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cpio
+        run: sudo apt-get install -y --no-install-recommends cpio
+
+      - name: Run wiring test
+        run: sh iso/tests/test-initramfs-wiring.sh
+
   build-distro:
     name: Build ${{ matrix.target }} artifact
-    needs: test-coordinator
+    needs: [test-coordinator, test-initramfs-wiring]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -101,6 +113,7 @@ jobs:
       - name: "Build (matrix target: ${{ matrix.target }})"
         run: |
           chmod +x iso/build.sh iso/pack-iso.sh iso/pack-qcow2.sh iso/pack-rootfs.sh kernel/build-kernel.sh
+          chmod +x iso/tests/test-initramfs-wiring.sh
           case "${{ matrix.target }}" in
             rootfs)
               sudo ./iso/build.sh
@@ -112,6 +125,8 @@ jobs:
               sudo ./iso/build.sh
               sudo chown -R "$(id -u):$(id -g)" out/ || true
               ./iso/pack-iso.sh
+              # Verifica che il cpio finale contenga il wrapper (copertura end-to-end)
+              sh iso/tests/test-initramfs-wiring.sh
               ;;
             qcow2)
               sudo ./iso/build.sh

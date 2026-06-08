@@ -60,6 +60,13 @@ pivot_root . oldroot
 # Smonta i filesystem di boot
 umount /oldroot/proc /oldroot/sys /oldroot/dev /oldroot/run /oldroot/tmp 2>/dev/null || true
 
-# Esegui il vero init: os_coordinator
-echo "[init] consegno il controllo a /sbin/os_coordinator"
-exec /sbin/os_coordinator
+# Esegui il vero init: os_coordinator. Se manca, logga e cadi in shell
+# di soccorso invece di panicare (utile per debug in QEMU smoke test).
+if [ -x /sbin/os_coordinator ]; then
+    echo "[init] consegno il controllo a /sbin/os_coordinator (PID 1 cognitivo)"
+    exec /sbin/os_coordinator
+else
+    echo "[init] WARN: /sbin/os_coordinator non trovato o non eseguibile"
+    echo "[init]cado in /bin/sh per debug. Controlla rootfs/etc/speace/."
+    exec /bin/sh
+fi

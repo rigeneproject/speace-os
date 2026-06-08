@@ -98,6 +98,16 @@ if [ ! -d "${ROOTFS}/bin" ]; then
         fi
     fi
 
+    # Wrapper /sbin/os_coordinator (eseguibile dal rootfs dopo pivot_root).
+    # È una copia speculare di initramfs/sbin/os_coordinator: se per qualche
+    # motivo l'initramfs è stato strippato, l'init può comunque trovarlo qui.
+    if [ -f "${ROOT}/initramfs/sbin/os_coordinator" ]; then
+        mkdir -p "${ROOTFS}/sbin"
+        cp -f "${ROOT}/initramfs/sbin/os_coordinator" "${ROOTFS}/sbin/os_coordinator"
+        chmod +x "${ROOTFS}/sbin/os_coordinator"
+        log "installo /sbin/os_coordinator (wrapper PID 1) nel rootfs"
+    fi
+
     # Crea utente e directory di stato
     log "creo utente speace e directory di stato"
     if [ -x "${ROOTFS}/usr/sbin/adduser" ] || [ -x "${ROOTFS}/sbin/adduser" ]; then
@@ -139,6 +149,17 @@ if [ ! -f "${INITRAMFS}" ]; then
     WORK="$(mktemp -d)"
     mkdir -p "${WORK}"
     cp -a "${ROOT}/initramfs/." "${WORK}/"
+
+    # Assicurati che /sbin/os_coordinator (wrapper PID 1) sia eseguibile.
+    # cp -a preserva i bit +x dal filesystem sorgente, ma se i permessi
+    # sul checkout sono persi (es. umask aggressivo), li ripristiniamo qui.
+    if [ -f "${WORK}/sbin/os_coordinator" ]; then
+        chmod +x "${WORK}/sbin/os_coordinator"
+        log "initramfs: wrapper /sbin/os_coordinator (PID 1) reso eseguibile"
+    else
+        log "initramfs: WARN wrapper /sbin/os_coordinator non presente, init cadrebbe in shell"
+    fi
+
     # Aggiungi os_coordinator al ramfs per garantire boot anche senza rootfs
     mkdir -p "${WORK}/opt/os_coordinator"
     cp -a "${ROOT}/os_coordinator/." "${WORK}/opt/os_coordinator/"
