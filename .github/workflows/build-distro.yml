@@ -104,14 +104,18 @@ jobs:
           case "${{ matrix.target }}" in
             rootfs)
               sudo ./iso/build.sh
+              # build.sh lascia out/ di proprietà di root; rendi scrivibile per il tar finale
+              sudo chown -R "$(id -u):$(id -g)" out/ || true
               ./iso/pack-rootfs.sh
               ;;
             iso)
               sudo ./iso/build.sh
+              sudo chown -R "$(id -u):$(id -g)" out/ || true
               ./iso/pack-iso.sh
               ;;
             qcow2)
               sudo ./iso/build.sh
+              sudo chown -R "$(id -u):$(id -g)" out/ || true
               ./iso/pack-qcow2.sh
               ;;
           esac
