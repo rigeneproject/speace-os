@@ -14,6 +14,7 @@ name: build-distro
 on:
   push:
     branches: [main]
+    tags: ['v*']
     paths:
       - 'os_coordinator/**'
       - 'rootfs/**'
@@ -25,8 +26,6 @@ on:
       - '.github/workflows/build-distro.yml'
   pull_request:
     branches: [main]
-  tags:
-    - 'v*'
   workflow_dispatch:
 
 permissions:
