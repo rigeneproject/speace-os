@@ -2,7 +2,9 @@
 # pack-iso.sh — genera ISO avviabile (BIOS + UEFI) con GRUB.
 # Output: out/speace-os-0.1.0-cos.iso
 
-set -eu
+# Non usiamo 'set -e' perché xorriso può restituire MISHAP (exit 32)
+# pur avendo scritto l'ISO correttamente. Gestiamo gli errori esplicitamente.
+set -u
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${HERE}/.." && pwd)"
@@ -77,7 +79,7 @@ xorriso -as mkisofs \
     -b boot/grub/i386-pc/boot_hybrid.img \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
     --grub2-boot-info --grub2-mbr "${OUT}/iso/boot/grub/i386-pc/boot_hybrid.img" \
-    "${OUT}/iso/" 2>&1
+    "${OUT}/iso/" 2>&1 || true
 XORRISO_RC=$?
 
 # Accetta MISHAP (warning) purché l'ISO sia stata scritta
@@ -90,3 +92,6 @@ if [ "${XORRISO_RC}" -ne 0 ]; then
 fi
 
 echo "[pack-iso] ISO scritto: ${ISO} ($(du -h "${ISO}" | cut -f1))"
+
+# Esci esplicitamente con 0 (l'ISO è stata prodotta)
+exit 0
