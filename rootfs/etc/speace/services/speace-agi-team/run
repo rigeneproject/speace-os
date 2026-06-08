@@ -1,0 +1,23 @@
+#!/bin/sh
+# speace-agi-team — team agentico AI (Ollama Cloud, minimax-m3:cloud).
+# Espone il web server di gestione agenti su http://127.0.0.1:8686.
+
+set -eu
+
+LOG=/var/log/speace/speace-agi-team.log
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+mkdir -p /var/log/speace
+
+cd "${SPEACE_CELLULAR}"
+
+echo "[speace-agi-team] avvio team agentico AI"
+echo "[speace-agi-team]   modello: ${OLLAMA_MODEL:-<unset>}"
+echo "[speace-agi-team]   endpoint: ${OLLAMA_ENDPOINT:-<unset>}"
+echo "[speace-agi-team]   api key:  ${OLLAMA_API_KEY:+<set>}${OLLAMA_API_KEY:-<unset>}"
+echo "[speace-agi-team]   web:      http://127.0.0.1:8686"
+
+exec python3 -m speace_agi_team.main --host 0.0.0.0 --port 8686

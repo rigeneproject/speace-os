@@ -1,0 +1,24 @@
+#!/bin/sh
+# speace-evolution — demone di auto-miglioramento 24/7.
+# Esegue LiveOrganism: cervello in loop + team agentico non-LLM ogni 300s.
+
+set -eu
+
+CONF=/etc/speace/coordinator.yaml
+LOG=/var/log/speace/speace-evolution.log
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+mkdir -p /var/log/speace
+
+cd "${SPEACE_CELLULAR}"
+
+echo "[speace-evolution] avvio demone auto-miglioramento (ciclo 300s, tick 1.0s)"
+
+# `speace live` = LiveOrganism (cervello + team non-LLM)
+exec python3 -m speace_core.cli live \
+    --cycle-interval 300.0 \
+    --tick-interval 1.0 \
+    --dashboards

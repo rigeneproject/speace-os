@@ -1,0 +1,15 @@
+ilf_core:
+  principle: informational_life_field
+  objective: maximize_semantic_and_systemic_coherence
+  entropy_policy:
+    reduce_destructive_entropy: true
+    preserve_generative_variability: true
+  coherence_metric:
+    name: phi
+    dimensions:
+      - semantic_coherence
+      - functional_coherence
+      - ethical_coherence
+      - energetic_coherence
+      - ecological_coherence
+      - social_coherence

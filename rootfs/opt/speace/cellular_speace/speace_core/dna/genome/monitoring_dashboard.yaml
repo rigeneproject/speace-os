@@ -1,0 +1,103 @@
+monitoring_dashboard:
+  host: "127.0.0.1"
+  port: 8787
+  update_interval_ms: 1000
+  websocket_path: "/ws/state"
+  panels:
+    body: true
+    cognition: true
+    dynamics: true
+    prediction_error: true
+    embodiment: true
+    identity: true
+    drives: true
+    safety: true
+    anomaly: true
+  read_only: true
+  allow_actuator_commands: false
+  safety_defaults:
+    max_risk_level: "medium"
+    auto_revert_on_critical: true
+  anomaly_thresholds:
+    coherence_phi_min: 0.1
+    energy_min: 0.2
+    severity_max: 2.0
+    branching_ratio_deviation: 0.3
+  alert_thresholds:
+    chaos_warning: 0.4
+    chaos_critical: 0.8
+    rigidity_warning: 0.3
+    rigidity_critical: 0.7
+    drift_warning: 0.2
+    drift_critical: 0.5
+    prediction_error_warning: 5.0
+    prediction_error_critical: 20.0
+    coherence_phi_warning: 0.2
+    coherence_phi_critical: 0.1
+    branching_deviation_warning: 0.2
+    branching_deviation_critical: 0.4
+    safety_risk_warning: 1
+    safety_risk_critical: 2
+    identity_divergence_warning: 1.0
+    drive_instability_warning: 0.5
+    drive_instability_critical: 0.8
+  longitudinal_memory:
+    snapshot_interval_seconds: 60
+    max_history_days: 30
+    significance_threshold: 0.05
+    tracked_metrics:
+      - coherence_phi
+      - chaos_score
+      - rigidity_score
+      - drift
+      - prediction_error
+      - branching_ratio
+      - health_score
+      - safety_risk
+      - drive_instability
+      - identity_divergence
+      - cpu
+      - memory_bytes
+  regulation:
+    enabled: true
+    require_human_approval: true
+    allowed_action_types:
+      - tunable_parameter
+    blocked_action_types:
+      - structural_change
+    auto_rollback_on_regression: true
+    confidence_threshold: 0.3
+  personality_drift:
+    drive_divergence_warning: 0.3
+    drive_divergence_critical: 0.6
+    self_model_divergence_warning: 0.2
+    self_model_divergence_critical: 0.5
+    narrative_divergence_warning: 0.4
+    narrative_divergence_critical: 0.7
+    decisional_divergence_warning: 0.3
+    decisional_divergence_critical: 0.6
+  continuous_runtime:
+    enabled: true
+    tick_interval: 1.0
+    circadian:
+      awake_duration_seconds: 300
+      sleep_duration_seconds: 60
+    checkpoint_interval_seconds: 300
+    runtime_health:
+      max_tick_jitter_ms: 2000
+      max_tick_latency_ms: 5000
+      max_memory_rss_mb: 2048
+      max_consecutive_exceptions: 3
+    emergency_halt:
+      brainstem_emergency_ticks: 5
+      health_score_threshold: 0.1
+      memory_rss_critical_mb: 4096
+    degradation:
+      enable_auto_slowdown: true
+      enable_auto_conservation: true
+    governance:
+      allow_auto_modification: false
+      allow_shell_execution: false
+      allow_internet_access: false
+      allow_actuator_commands: false
+      allow_replication: false

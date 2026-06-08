@@ -1,0 +1,19 @@
+#!/bin/sh
+# speace-dashboard — monitor FastAPI (T101) per ispezione runtime.
+# Espone il monitor web su http://127.0.0.1:8787.
+
+set -eu
+
+LOG=/var/log/speace/speace-dashboard.log
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+mkdir -p /var/log/speace
+
+cd "${SPEACE_CELLULAR}"
+
+echo "[speace-dashboard] avvio monitor FastAPI su http://127.0.0.1:8787"
+
+exec python3 -m speace_core.cli monitor

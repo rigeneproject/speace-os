@@ -1,0 +1,5 @@
+immune:
+  prune_threshold: 0.1
+  quarantine_error_limit: 10
+  myelination_success_threshold: 0.8
+  latency_reduction: 0.3

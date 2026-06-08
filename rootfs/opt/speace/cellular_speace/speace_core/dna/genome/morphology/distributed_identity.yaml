@@ -1,0 +1,11 @@
+# Distributed identity substrate configuration for SPEACE morphology.
+# Governs how the organism synchronises self-model across multiple nodes.
+
+distributed_identity:
+  enabled: false
+  description: "Distributed self-model synchronisation across peer nodes"
+  parameters:
+    node_trust_threshold: 0.3
+    sync_interval: 60
+    max_nodes: 128
+    divergence_tolerance: 0.25

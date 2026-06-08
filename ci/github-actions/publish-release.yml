@@ -1,0 +1,59 @@
+name: publish-release
+
+# Pubblica artefatti su GitHub Releases quando si fa push di un tag.
+# Di solito invocato automaticamente da build-distro.yml — questo è
+# un workflow di fallback se si vuole pubblicare manualmente.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag di release (es. v0.1.0-cos)'
+        required: true
+        default: 'v0.1.0-cos'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag di release'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Generate checksums
+        run: |
+          cd dist/
+          find . -type f \( -name '*.iso' -o -name '*.qcow2' -o -name '*.tar.gz' \) \
+            -exec sha256sum {} \; > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: SPEACE OS ${{ inputs.tag || github.ref_name }}
+          body: |
+            Cognitive Operating System basata su cellular_speace.
+
+            Vedi [docs/ARCHITECTURE.md] per i dettagli tecnici.
+          files: |
+            dist/**/speace-os-*.iso
+            dist/**/speace-os-*.qcow2
+            dist/**/rootfs.tar.gz
+            dist/SHA256SUMS
+          draft: false
+          prerelease: false

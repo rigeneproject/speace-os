@@ -1,0 +1,16 @@
+emergent_dynamics_stabilizer:
+  enabled: false
+  chaos_threshold: 0.35
+  rigidity_threshold: 0.02
+  drift_threshold: 0.3
+  loop_intensity_threshold: 2.5
+  criticality_drift_threshold: 0.2
+  embodiment_stress_threshold: 0.7
+  history_window: 100
+  seed: 42
+
+cognitive_attractor_tracker:
+  enabled: false
+  history_window: 500
+  attractor_radius: 0.15
+  min_visit_count: 5

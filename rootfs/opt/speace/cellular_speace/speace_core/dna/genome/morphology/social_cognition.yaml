@@ -1,0 +1,35 @@
+# Social Cognition and Theory of Mind substrate configuration for SPEACE morphology.
+# Enables distributed organismic operation via agent modelling, cooperation, and conflict resolution.
+
+social_cognition:
+  enabled: false
+  description: "Social cognition layer: Theory of Mind, cooperation protocols, and conflict resolution"
+  modules:
+    social_model_engine:
+      enabled: false
+      description: "Predictive agent modelling with nested beliefs"
+      parameters:
+        default_trust: 0.5
+        trust_cooperation_delta: 0.1
+        trust_defection_delta: -0.2
+        max_trust: 1.0
+        min_trust: 0.0
+        prediction_smoothing: true
+        max_interaction_history: 10000
+
+    cooperation_protocol:
+      enabled: false
+      description: "Game-theoretic cooperation evaluation and defection detection"
+      parameters:
+        trust_weight: 0.5
+        benefit_weight: 0.5
+        acceptance_threshold: 0.5
+        default_predicted_benefit: 0.5
+
+    conflict_resolution:
+      enabled: false
+      description: "Goal/belief conflict detection, mediation, and threat escalation"
+      parameters:
+        mediation_enabled: true
+        escalation_limit: 10
+        goal_negation_prefix: "not_"

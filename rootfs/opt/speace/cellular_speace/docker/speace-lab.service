@@ -1,0 +1,67 @@
+# Stage 2.5 — Sandbox Autonomy (laboratory)
+# Unit file systemd DA USARE SOLO DENTRO IL CONTAINER LAB.
+# Non installare questo servizio sull'host.
+#
+# Questo file mostra come SPEACE verrebbe gestita come servizio di
+# sistema se il container utilizzasse systemd come init (es. immagine
+# python:3.12-slim + systemd). Nel caso standard, l'entrypoint
+# entrypoint_sandbox.sh agisce come PID 1 e questo file è documentativo.
+
+[Unit]
+Description=SPEACE Stage 2.5 Sandbox Lab Organism
+Documentation=https://github.com/rigeneproject/cellular_speace
+After=network.target
+# Si vuole evitare che il servizio parta se il container non è
+# effettivamente isolato. Questo è documentativo: la verifica reale
+# è fatta da entrypoint_sandbox.sh.
+ConditionPathExists=/cellular_speace/speace_core
+ConditionEnvironment=SPEACE_STAGE=2.5-sandbox-lab
+
+[Service]
+Type=simple
+User=speace
+Group=speace
+WorkingDirectory=/cellular_speace
+
+# Variabili d'ambiente esplicite; SPEACE_SANDBOX=0 per default.
+Environment=SPEACE_STAGE=2.5-sandbox-lab
+Environment=SPEACE_SANDBOX=0
+Environment=PYTHONUNBUFFERED=1
+
+# Avvio standard
+ExecStart=/usr/local/bin/speace monitor
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart solo su errore, non su terminazione pulita
+Restart=on-failure
+RestartSec=5s
+
+# Hardening di base (in container con capability ridotte l'effetto è limitato,
+# ma documenta l'intenzione)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/cellular_speace/data /cellular_speace/reports
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false  # Python ha bisogno di mmap RWX in alcuni casi
+
+# Limiti risorse (specchio dei limiti in docker-compose.sandbox.yml)
+LimitNOFILE=4096
+LimitNPROC=256
+MemoryMax=2G
+CPUQuota=200%
+
+# Log
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=speace-lab
+
+[Install]
+WantedBy=multi-user.target

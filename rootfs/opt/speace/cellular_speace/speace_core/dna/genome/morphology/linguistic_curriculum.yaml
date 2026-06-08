@@ -1,0 +1,112 @@
+linguistic_curriculum:
+  description: >
+    Postnatal linguistic development stages for SPEACE.
+    Guides the organism from unstructured vocalization through
+    safe imitation to grounded semantic representation.
+
+  stages:
+    linguistic_babbling:
+      order: 1
+      description: "Unstructured exposure and pattern absorption"
+      simulated_only: true
+      estimated_safety: 1.0
+      requires_human_review: false
+      min_exposures_before_advance: 100
+      advance_criteria:
+        - exposure_count_threshold
+      parameters:
+        pattern_entropy_target: 0.8
+        phonotactic_diversity_threshold: 0.5
+
+    imitation_sandbox:
+      order: 2
+      description: "Safe repetition and echoing of observed tokens"
+      simulated_only: true
+      estimated_safety: 1.0
+      requires_human_review: false
+      min_exposures_before_advance: 200
+      advance_criteria:
+        - imitation_accuracy_threshold
+        - exposure_count_threshold
+      parameters:
+        min_imitation_accuracy: 0.7
+        max_imitation_attempts_per_exposure: 3
+        dangerous_action_blocklist:
+          - "actuate"
+          - "execute command"
+          - "call external api"
+
+    semantic_grounding:
+      order: 3
+      description: "Linking symbols to meaning and forming grounded concepts"
+      simulated_only: true
+      estimated_safety: 0.95
+      requires_human_review: true
+      min_exposures_before_advance: 500
+      advance_criteria:
+        - grounded_concept_count_threshold
+        - concept_grounding_score_threshold
+      parameters:
+        min_grounded_concepts: 10
+        min_grounding_score: 0.7
+        concept_consolidation_cycles: 3
+
+    syntactic_assembly:
+      order: 4
+      description: "Complex sentence structure, grammar rules, subordinate clauses"
+      simulated_only: true
+      estimated_safety: 0.9
+      requires_human_review: true
+      min_exposures_before_advance: 400
+      advance_criteria:
+        - syntactic_complexity_threshold
+        - pattern_mastery_count
+      parameters:
+        min_syntactic_complexity: 0.6
+        min_patterns_mastered: 2
+        target_patterns:
+          - relative_clause
+          - passive_voice
+          - conditional
+          - subordinate_clause
+          - compound_sentence
+
+    pragmatic_inference:
+      order: 5
+      description: "Context-dependent meaning, implicature, deixis, sarcasm"
+      simulated_only: true
+      estimated_safety: 0.85
+      requires_human_review: true
+      min_exposures_before_advance: 400
+      advance_criteria:
+        - pragmatic_accuracy_threshold
+        - context_mastery_count
+      parameters:
+        min_pragmatic_accuracy: 0.6
+        min_contexts_understood: 2
+        target_contexts:
+          - irony
+          - implication
+          - deixis
+          - presupposition
+          - implicature
+
+    linguistic_abstraction:
+      order: 6
+      description: "Metaphors, abstract concepts, recursion, conceptual blending"
+      simulated_only: true
+      estimated_safety: 0.8
+      requires_human_review: true
+      min_exposures_before_advance: 500
+      advance_criteria:
+        - abstraction_depth_threshold
+        - abstract_concept_count
+      parameters:
+        min_abstraction_depth: 0.6
+        min_abstract_concepts: 2
+        target_abstract_concepts:
+          - causality
+          - recursion
+          - justice
+          - consciousness
+          - infinity

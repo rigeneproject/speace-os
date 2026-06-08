@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEACE AGI Team — Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">
+      <span class="logo-icon">🧬</span>
+      <div>
+        <h1>SPEACE AGI Team</h1>
+        <span class="subtitle">Agentic AI per l'evoluzione verso AGI</span>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat"><span class="stat-label">Agenti</span><span id="agentCount" class="stat-value">0</span></div>
+      <div class="stat"><span class="stat-label">Progresso</span><span id="planProgress" class="stat-value">0%</span></div>
+      <div class="stat"><span class="stat-label">Modello</span><span id="modelName" class="stat-value">...</span></div>
+      <div class="stat"><span class="stat-label">Stato</span><span id="systemStatus" class="stat-value status-ok">Online</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="agents">Agenti</button>
+    <button class="tab" data-tab="chat">Chat</button>
+    <button class="tab" data-tab="plan">Piano Ingegneristico</button>
+    <button class="tab" data-tab="speace">SPEACE Context</button>
+    <button class="tab" data-tab="orchestrator">Orchestrator</button>
+    <button class="tab" data-tab="research">Web Research</button>
+  </nav>
+
+  <main>
+    <!-- ── Dashboard ──────────────────────────────────── -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="grid">
+        <div class="card" id="supervisor-summary">
+          <div class="card-header">Supervisor Agents</div>
+          <div class="card-body" id="supervisorList">Caricamento...</div>
+        </div>
+        <div class="card" id="technician-summary">
+          <div class="card-header">Technical Agents</div>
+          <div class="card-body" id="technicianList">Caricamento...</div>
+        </div>
+        <div class="card" id="plan-summary">
+          <div class="card-header">Piano Ingegneristico</div>
+          <div class="card-body" id="planSummary">
+            <div class="progress-ring">
+              <svg viewBox="0 0 36 36">
+                <path class="progress-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path id="progressArc" class="progress-fill" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <text x="18" y="20.5" class="progress-text" id="progressPercent">0%</text>
+              </svg>
+            </div>
+            <div id="milestoneList" class="milestone-list"></div>
+          </div>
+        </div>
+        <div class="card" id="speace-status-card">
+          <div class="card-header">Stato SPEACE</div>
+          <div class="card-body" id="speaceStatus">Caricamento...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Agents ─────────────────────────────────────── -->
+    <section id="tab-agents" class="tab-content">
+      <div class="toolbar">
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">Tutti</button>
+          <button class="filter-btn" data-filter="supervisor">Supervisor</button>
+          <button class="filter-btn" data-filter="technician">Tecnici</button>
+        </div>
+        <div class="action-group">
+          <button id="broadcastBtn" class="btn btn-primary">Broadcast a tutti</button>
+          <button id="analyzeBtn" class="btn btn-secondary">Analizza SPEACE</button>
+        </div>
+      </div>
+      <div id="agentsGrid" class="agents-grid"></div>
+    </section>
+
+    <!-- ── Chat ──────────────────────────────────────── -->
+    <section id="tab-chat" class="tab-content">
+      <div class="chat-layout">
+        <div class="chat-sidebar">
+          <h3>Agenti</h3>
+          <div id="chatAgentList" class="chat-agent-list"></div>
+          <div class="broadcast-area">
+            <button id="broadcastChatBtn" class="btn btn-primary btn-small">Broadcast a tutti</button>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-header">
+            <span id="chatAgentName">Seleziona un agente</span>
+            <div class="chat-actions">
+              <button id="chatWebSearchBtn" class="btn btn-small btn-primary">Cerca sul Web</button>
+              <button id="chatClearBtn" class="btn btn-small">Pulisci</button>
+            </div>
+          </div>
+          <div id="chatMessages" class="chat-messages">
+            <div class="chat-placeholder">Seleziona un agente dalla lista per iniziare a chattare</div>
+          </div>
+          <div class="chat-input-area">
+            <textarea id="chatInput" placeholder="Scrivi un messaggio all'agente..." rows="2"></textarea>
+            <button id="chatSendBtn" class="btn btn-primary">Invia</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Plan ───────────────────────────────────────── -->
+    <section id="tab-plan" class="tab-content">
+      <div class="plan-header">
+        <h2>Piano Ingegneristico Strategico</h2>
+        <div class="plan-actions">
+          <button id="addTaskBtn" class="btn btn-primary">+ Nuovo Task</button>
+          <button id="refreshPlanBtn" class="btn btn-secondary">Aggiorna</button>
+        </div>
+      </div>
+      <div class="plan-progress-bar">
+        <div id="planProgressBar" class="plan-progress-fill" style="width:0%"></div>
+        <span id="planProgressLabel">0%</span>
+      </div>
+      <div id="milestonesContainer" class="milestones-container"></div>
+      <div id="tasksContainer" class="tasks-container"></div>
+    </section>
+
+    <!-- ── SPEACE Context ─────────────────────────────── -->
+    <section id="tab-speace" class="tab-content">
+      <h2>Stato Live di SPEACE</h2>
+      <div class="speace-metrics" id="speaceMetrics">Caricamento...</div>
+      <pre id="speaceRawData" class="raw-data"></pre>
+    </section>
+
+    <!-- ── Orchestrator ────────────────────────────────── -->
+    <section id="tab-orchestrator" class="tab-content">
+      <h2>Orchestrator — Auto-Analisi, Monitor, Load Balancing</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">Stato Orchestrator</div>
+          <div class="card-body" id="orchestratorStatus">Caricamento...</div>
+        </div>
+        <div class="card">
+          <div class="card-header">Health Monitor (SPEACE Runtime)</div>
+          <div class="card-body" id="healthMonitor">Caricamento...</div>
+        </div>
+        <div class="card">
+          <div class="card-header">Load Distribution</div>
+          <div class="card-body" id="loadDistribution">Caricamento...</div>
+        </div>
+        <div class="card">
+          <div class="card-header">Auto-Analysis Log</div>
+          <div class="card-body">
+            <div class="toolbar">
+              <button id="triggerTickBtn" class="btn btn-primary btn-small">Forza Tick</button>
+              <button id="triggerAnalyzeAllBtn" class="btn btn-secondary btn-small">Analizza Tutti</button>
+            </div>
+            <div id="autoAnalysisList" class="auto-analysis-list">Caricamento...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Web Research ────────────────────────────────── -->
+    <section id="tab-research" class="tab-content">
+      <h2>Ricerca Web per SPEACE</h2>
+      <p style="color:var(--text-dim);font-size:0.9em;margin-bottom:16px;">
+        Cerca documenti tecnici e scientifici sul web. Puoi chiedere a un agente specifico
+        di fare una ricerca e sintetizzare i risultati, oppure fare una ricerca diretta
+        e leggere i documenti estratti.
+      </p>
+      <div class="grid">
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header">Nuova Ricerca</div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group" style="flex:2;">
+                <label>Query di ricerca</label>
+                <input id="researchQuery" type="text" placeholder="es. neural plasticity review 2024">
+              </div>
+              <div class="form-group">
+                <label>Agente</label>
+                <select id="researchAgent">
+                  <option value="">(ricerca diretta)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Max risultati</label>
+                <input id="researchMaxResults" type="number" min="1" max="10" value="5">
+              </div>
+              <div class="form-group">
+                <label>Documenti da leggere</label>
+                <input id="researchFetchTop" type="number" min="0" max="5" value="2">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>
+                <input id="researchSynthesize" type="checkbox" checked>
+                Chiedi all'agente di sintetizzare i risultati (consigliato)
+              </label>
+            </div>
+            <div class="toolbar">
+              <button id="runResearchBtn" class="btn btn-primary">Avvia Ricerca</button>
+              <button id="clearResearchBtn" class="btn btn-secondary">Pulisci</button>
+            </div>
+            <div id="researchStatus" class="research-status"></div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header">Risultati</div>
+          <div class="card-body" id="researchResults">Nessuna ricerca eseguita.</div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header">Cronologia Ricerche per Agente</div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group" style="flex:1;">
+                <label>Agente</label>
+                <select id="historyAgent"></select>
+              </div>
+              <button id="loadHistoryBtn" class="btn btn-primary" style="align-self:flex-end;">Carica cronologia</button>
+            </div>
+            <div id="researchHistory" class="research-history"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ── Broadcast Modal ────────────────────────────── -->
+<div id="broadcastModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Broadcast a tutti gli agenti</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <textarea id="broadcastInput" placeholder="Scrivi il messaggio per tutti gli agenti..." rows="4"></textarea>
+    <div class="modal-footer">
+      <button id="broadcastSendBtn" class="btn btn-primary">Invia Broadcast</button>
+      <button class="btn btn-secondary modal-close">Annulla</button>
+    </div>
+    <div id="broadcastResults" class="broadcast-results"></div>
+  </div>
+</div>
+
+<!-- ── Task Modal ─────────────────────────────────── -->
+<div id="taskModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Nuovo Task Ingegneristico</h3>
+      <button class="modal-close">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Titolo</label>
+      <input id="taskTitle" type="text" placeholder="Titolo del task">
+    </div>
+    <div class="form-group">
+      <label>Descrizione</label>
+      <textarea id="taskDesc" rows="3" placeholder="Descrizione dettagliata"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Assegnato a</label>
+        <select id="taskAgent"></select>
+      </div>
+      <div class="form-group">
+        <label>Priorità</label>
+        <select id="taskPriority">
+          <option value="high">Alta</option>
+          <option value="medium" selected>Media</option>
+          <option value="low">Bassa</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Milestone</label>
+      <select id="taskMilestone"></select>
+    </div>
+    <div class="modal-footer">
+      <button id="taskSaveBtn" class="btn btn-primary">Crea Task</button>
+      <button class="btn btn-secondary modal-close">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

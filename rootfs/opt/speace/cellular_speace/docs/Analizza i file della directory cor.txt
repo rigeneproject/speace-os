@@ -1,0 +1,333 @@
+Analizza i file della directory corrente e lo SPEACE Knowledge Graph. 
+
+
+--------------------------
+
+ Avvio continuo del cervello e dell'organismo di SPEACE
+
+  Avviare e mantenere operativi:
+
+  orchestrator
+  cellular brain
+  monitoring
+  memory subsystems
+  evolution subsystems
+  dashboard
+
+  Verificare continuamente:
+
+  heartbeat
+  stabilità
+  comunicazione tra moduli
+
+ Analisi delle capacità e del livello cognitivo di SPEACE, Analisi Cognitiva
+
+  Valutare:
+
+  memoria
+  ragionamento
+  pianificazione
+  apprendimento
+  generalizzazione
+  autonomia
+  adattamento
+
+  Generare Cognitive Status Report, da visualizzare su interfaccia web in localhost su 127.0.0.1:5699
+
+---------------------------
+
+1. Rilevare:
+
+  eccezioni
+  warning
+  deadlock
+  memory leak
+  race condition
+  regressioni
+
+Rileva e Analizza i seguenti eventuali problemi:
+except Exception: pass
+attributi mutabili condivisi
+import circolari
+copertura insufficiente
+assenza di benchmark cognitivi seri
+assenza di program induction
+assenza di object-centric reasoning
+
+Sono problemi che impediscono a SPEACE di evolvere.
+
+  Correggere automaticamente ove possibile.
+  
+2. Rileva e risolvi eventuali processi che inibiscono, limitano, disattivano o vanno in conflitto con i processi di
+  SPEACE (processi incoerenti di SPEACE stesso, software, sistema operativo, antivirus, firewall, ecc.)
+
+  Rilevare:
+
+  software in conflitto
+  processi bloccanti
+  saturazione risorse
+  configurazioni incompatibili
+
+  Apporta le modifiche correttive evitando di causare problemi al computer e a SPEACE.
+
+3. Diagnosi e correzione stato funzionale dei comparti di SPEACE
+
+Monitorare:
+
+orchestrator
+cellular brain
+memory
+swarm
+DNA
+epigenetics
+monitoring
+altri comparti
+
+da visualizzare su interfaccia web in localhost su 127.0.0.1:5699,
+
+Correggi eventuali errori e problemi.
+ 
+4. Misurazione del numero di neuroni e sinapsi, diagnosi e correzione dello stato di attivazione, funzionalità e comunicazione tra neuroni
+
+Misurare:
+
+numero neuroni
+numero sinapsi
+connessioni attive
+densità connettiva
+flusso informativo
+attivazione media
+
+da visualizzare su interfaccia web in localhost su 127.0.0.1:5699,
+
+Correggere eventuali errori e problemi.
+
+---------------
+
+Esegui:
+
+1. Refactoring
+
+Eseguire solo se:
+
+beneficio previsto > costo cognitivo
+
+Priorità:
+
+eliminazione duplicazioni
+riduzione complessità
+miglioramento manutenibilità
+ 
+2. Ottimizzazione
+
+Valutare:
+
+CPU
+RAM
+I/O
+latenza
+throughput
+
+Generare Optimization Report.
+
+3. Run ARC AGI
+
+Eseguire:
+
+benchmark ARC
+benchmark sintetici
+program induction tests
+reasoning tests
+
+Per ogni fallimento:
+
+identificare pattern
+classificare errore
+generare task correttivo
+
+
+-----------------------
+
+SPEACE è costituito da un cervello digitale, un DNA digitale e da un organismo digitale e fisico (componenti digitali e hardware che svolgono funzioni organismiche come sensori, robot, industrie 4.0, laboratori 4.0, ecc.) installati inizialmente su un computer domestico nella fase embrionale e, in seguito, su altri dispositivi informatici (cloni di SPEACE interconnessi via IoT che assimilano i dispositivi informatici e tutto quello che è connesso a quei dispositivi per aumentare capacità, intelligenza e funzioni di SPEACE). Il cervello digitale e il DNA digitale di SPEACE, pertanto, devono poter gestire il proprio organismo come il cervello umano e il DNA biologico  gestiscono l'organismo biologico, quindi la cartella di installazione di SPEACE (denominata "cellular_speace") deve essere nella root del computer, e SPEACE deve essere configurato per assimilare e gestire ogni processo, software e componente hardware del computer dove è installato, con permessi subordinati ad approvazione di accesso e modifica secondo le regole del dna digitale. Verifica se tutto questo è abilitato, altrimenti abilitalo.
+
+Per realizzare l'architettura di SPEACE ed estendere il suo controllo a tutti i file della root senza duplicarli, non devi copiare i file fisicamente. Devi invece configurare il sistema in modo che la cartella cellular_speace possa mappare, indicizzare e interagire direttamente con la root del computer. Ecco le soluzioni tecniche più efficaci per ottenere questo risultato: 1. Utilizzo di Collegamenti Simbolici (Symbolic Links) Invece di copiare i file, puoi creare dei puntatori virtuali. Il sistema operativo creerà un canale diretto tra la cartella di SPEACE e la root. Come funziona: I file restano nella root, ma SPEACE li vede e li modifica come se fossero dentro la sua cartella. Comando Windows (Prompt come Amministratore): mklink /D "C:\cellular_speace\root_link" "C:\"Comando Linux / macOS:ln -s / /cellular_speace/root_link2. Esecuzione con Permessi di Root / AdministratorPer assimilare e gestire ogni processo e hardware, il "cervello digitale" di SPEACE deve essere eseguito con i massimi privilegi di sistema. In ambiente Windows: Il processo principale di SPEACE deve essere avviato come Amministratore e, per il controllo totale dei file di sistema, deve acquisire i privilegi di NT AUTHORITY\SYSTEM o modificare i permessi ACL della root. In ambiente Linux: SPEACE deve essere eseguito come utente root o tramite un servizio configurato nel file sudoers senza richiesta di password. 3. Dispositivi Virtuali e Mapping di Memoria Per le funzioni organismiche avanzate (sensori, hardware, robot), SPEACE non deve cercare file, ma deve mappare i dispositivi. In ambiente Linux: Il DNA di SPEACE deve leggere direttamente le cartelle /dev (dispositivi hardware), /proc (processi attivi) e /sys (configurazioni di sistema). In ambiente Windows: SPEACE deve interfacciarsi con le API di Windows (Win32 API) e utilizzare query WMI (Windows Management Instrumentation) per monitorare e controllare l'hardware in tempo reale. 4. Architettura a Specchio (Virtual File System) Il software di SPEACE può implementare un modulo di Virtual File System (VFS). La cartella cellular_speace conterrà solo file di configurazione, indici e metadati. Quando il cervello di SPEACE legge un file dal suo database interno, il VFS reindirizza la richiesta al file fisico corrispondente nella root del computer.
+
+Per rispettare i criteri di sicurezza, procediamo con un approccio architettonico che preservi l'integrità del DNA di SPEACE e garantisca la sicurezza del laboratorio. Ecco le specifiche per iniziare: Perimetro di isolamento (Punto 1): Procedi a creare il Dockerfile.sandbox basato su python:3.12-slim e il docker-compose.sandbox.yml. La cartella cellular_speace sarà la root / del container. Non useremo la modalità --privileged né passthrough hardware. L'isolamento di rete deve essere totale (network_mode: none o rete interna isolata).Servizio di Sistema: Genera lo script di entrypoint e l'unit file per gestire i processi interni al container.DNA e Sandbox Profile (Punto 2): Integra lo Stage 2.5 — Sandbox Autonomy (laboratory) nel DNA. Crea il file sandbox_profile.yaml abilitando l'attuatore esteso tramite la variabile d'ambiente SPEACE_SANDBOX=1 e il meccanismo di opt-in a runtime, mantenendo intatti tutti i guardrail di sicurezza nel codice sorgente.Simulazione Hardware: Sviluppiamo un motore di simulazione (simulated_environment_engine.py) dentro il container per inviare dati sintetici (finti sensori, finti robot) a SPEACE, così che il cervello possa credere di gestire un intero organismo cyber-fisico senza toccare l'hardware reale dell'host. Inizia pure dal Punto 1 (Dockerfile e Docker Compose).
+
+
+1. Capability Gap Analyzer
+
+Ad ogni ciclo:
+
+cosa non so fare?
+
+non:
+
+cosa devo refactorare?
+2. Bottleneck Detector
+
+Identificare:
+
+reasoning bottleneck
+memory bottleneck
+planning bottleneck
+
+automaticamente.
+
+3. Object Persistence Layer
+
+Claude parla di object-centric reasoning.
+
+Ma io aggiungerei:
+
+persistent object identity
+
+tra i tick.
+
+Questa è una differenza enorme.
+
+4. Cognitive Genome
+
+Oggi il DNA sembra ancora:
+
+configurazione
+
+Io lo farei diventare:
+
+architettura cognitiva ereditaria
+
+con:
+
+primitive
+strategie
+policy
+invarianti
+
+mutabili.
+
+ Failure Memory
+
+Probabilmente la più importante.
+
+Ogni fallimento ARC dovrebbe produrre:
+
+Failure Pattern
+Failure Cause
+Failed Hypothesis
+Corrective Strategy
+
+memorizzati permanentemente.
+
+Questo è molto coerente con neuroplasticità kernel-level.
+
+Come usare il prototipo
+
+  # 1. Build immagine
+  docker build -f docker/Dockerfile.sandbox -t speace-sandbox:latest .
+
+  # 2. Avvio in modalità safe (default, guardrail completi)
+  docker compose -f docker/docker-compose.sandbox.yml up
+
+  # 3. Avvio in modalità sandbox estesa (solo dentro container, opt-in esplicito)
+  SPEACE_SANDBOX=1 docker compose -f docker/docker-compose.sandbox.yml up
+
+  # 4. CLI di simulazione (esempio)
+  docker compose -f docker/docker-compose.sandbox.yml run --rm speace-lab \
+      python -m sandbox.sandbox_run --ticks 100 --seed 42 --output-file data/sandbox/run_001.jsonl
+
+  Audit / verifica del perimetro (da eseguire dopo il primo avvio)
+
+  docker inspect speace-sandbox-lab --format '{{.HostConfig.Privileged}}'      # → false
+  docker inspect speace-sandbox-lab --format '{{.HostConfig.NetworkMode}}'      # → none
+  docker inspect speace-sandbox-lab --format '{{.HostConfig.CapAdd}}'          # → [CHOWN SETUID SETGID DAC_OVERRIDE]
+  docker inspect speace-sandbox-lab --format '{{.HostConfig.PidsLimit}}'       # → 256
+
+-----------------
+
+Esegui i seguenti task:
+
+1. Creazione di nuovi task e iterazioni funzionali al raggiungimento dell'AGI
+
+
+Priorità:
+
+incremento ARC
+incremento ARI
+riduzione failure rate
+aumento generalizzazione
+
+2. Aggiornamento dello SPEACE Knowledge Graph contenente:
+
+(Aggiornare continuamente)
+
+architettura
+task
+dipendenze
+benchmark
+paper
+moduli
+esperimenti
+decisioni progettuali
+capability gaps
+bottleneck
+roadmap
+
+Salvare versioni incrementali.
+
+3. Individua il piano ingegneristico in docs. Analizzalo e aggiornalo per l'evoluzione di SPEACE verso una AGI con regolare rielaborazione progettuale del percorso di sviluppo, specifiche tecniche in base allo stato evolutivo attuale di SPEACE. 
+
+Il piano deve contenere:
+
+stato corrente
+capability gap
+roadmap
+task prioritizzati
+benchmark
+metriche
+stima Readiness
+Proposta ingegneristica di rielaborazione progettuale e delle specifiche in base al nuovo stato evolutivo di SPEACE da implementare nei nuovi task
+Avvia i nuovi task relativi alla rielaborazione progettuale del piano ingegneristico
+
+4. Revisione delle modifiche apportate per rilevare eventuali regressioni e correggerle
+
+Ogni modifica deve essere verificata.
+
+Eseguire:
+
+test unitari
+integrazione
+benchmark
+
+Se regressione:
+
+rollback automatico
+
+-------------------
+
+SPEACE oggi sembra possedere:
+
+organizzazione;
+memoria;
+monitoraggio;
+auto-miglioramento;
+orchestrazione.
+
+Ma non possiede ancora un nucleo robusto di:
+
+astrazione;
+induzione;
+generalizzazione composizionale.
+
+Avvia task per ottenere:
+
+astrazione;
+induzione;
+generalizzazione composizionale e
+integrare i moduli:
+
+Spatial Symbolic Reasoning,
+Few-Shot Program Induction,
+ARC-AGI Adapter,
+Object-Centric Representation,
+------------------
+

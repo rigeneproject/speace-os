@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPEACE Web Gateway</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>SPEACE Web Gateway</h1>
+      <div class="status-bar">
+        <span id="conn-status">Disconnesso</span>
+        <input type="password" id="api-key" placeholder="X-API-Key" />
+        <button id="btn-connect">Connetti</button>
+      </div>
+      <p id="bootstrap-hint" class="hint" style="margin-top:0.5rem; color:#f59e0b;">
+        Prima volta? La chiave Admin si trova nei log del terminale del gateway oppure nel file
+        <code>data/web_gateway/bootstrap_key.txt</code>. Incollala qui e clicca "Connetti".
+      </p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="tab-dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="tab-runtime">Controllo Runtime</button>
+      <button class="tab-btn" data-tab="tab-nodes">Nodi</button>
+      <button class="tab-btn" data-tab="tab-dialogue">Dialogo</button>
+    </nav>
+
+    <main>
+      <div id="tab-dashboard" class="tab-panel active">
+        <section id="dashboard" class="panel">
+          <h2>Dashboard</h2>
+          <div class="metrics">
+            <div class="metric">
+              <label>Stato Runtime</label>
+              <span id="runtime-state">—</span>
+            </div>
+            <div class="metric">
+              <label>Health Score</label>
+              <div class="bar"><div id="health-bar"></div></div>
+              <span id="health-value">—</span>
+            </div>
+            <div class="metric">
+              <label>Tick Count</label>
+              <span id="tick-count">—</span>
+            </div>
+            <div class="metric">
+              <label>Fase Circadiana</label>
+              <span id="circadian-phase">—</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="alerts" class="panel">
+          <h2>Alert</h2>
+          <ul id="alert-list"></ul>
+        </section>
+      </div>
+
+      <div id="tab-runtime" class="tab-panel">
+        <section class="panel">
+          <h2>Controllo Runtime (T122)</h2>
+          <p class="hint">Ogni azione genera una proposta che richiede approvazione umana.</p>
+          <div class="controls">
+            <button class="ctrl-btn" data-action="pause">⏸️ Pausa</button>
+            <button class="ctrl-btn" data-action="resume">▶️ Riprendi</button>
+            <button class="ctrl-btn danger" data-action="halt">⏹️ Halt</button>
+            <button class="ctrl-btn" data-action="checkpoint">💾 Checkpoint</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Proposte Pending</h2>
+          <button id="btn-refresh-proposals">Aggiorna</button>
+          <ul id="proposal-list"></ul>
+        </section>
+      </div>
+
+      <div id="tab-nodes" class="tab-panel">
+        <section class="panel">
+          <h2>Nodi SPEACE (T123)</h2>
+          <button id="btn-refresh-nodes">Aggiorna</button>
+          <table id="nodes-table">
+            <thead>
+              <tr><th>ID</th><th>Trust</th><th>Ultimo contatto</th><th>Stato</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div id="tab-dialogue" class="tab-panel">
+        <section id="dialogue" class="panel">
+          <h2>Dialogo</h2>
+          <div id="chat-history"></div>
+          <div class="chat-input">
+            <input type="text" id="chat-message" placeholder="Scrivi a SPEACE..." />
+            <button id="btn-send">Invia</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p>T121–T123 — SPEACE Secure Web Gateway · Read-only · No actuators · Human approval required</p>
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modal-title">Conferma azione</h3>
+      <p id="modal-body">Sei sicuro?</p>
+      <div class="modal-actions">
+        <button id="modal-cancel">Annulla</button>
+        <button id="modal-confirm">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

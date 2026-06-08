@@ -1,0 +1,7 @@
+homeostasis:
+  default_threshold: 0.5
+  default_plasticity_rate: 0.05
+  max_energy: 1.0
+  overload_threshold: 0.85
+  noise_suppression_rate: 0.2
+  energy_recovery_rate: 0.01

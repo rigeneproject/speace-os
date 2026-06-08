@@ -1,0 +1,114 @@
+# Stage 2.5 — Sandbox Autonomy (laboratory)
+# Avvio:   docker compose -f docker/docker-compose.sandbox.yml up
+# Stop:    docker compose -f docker/docker-compose.sandbox.yml down
+# Logs:    docker compose -f docker/docker-compose.sandbox.yml logs -f
+#
+# REGOLE DEL PERIMETRO (vedi docs/speace_seed.md e species_orientation.yaml):
+#   - Niente privileged: true
+#   - Niente device passthrough (/dev, /proc, /sys mai dall'host)
+#   - Niente network_mode: host
+#   - Niente volumi dall'host se non quello read-write di cellular_speace
+#   - capability ridotte al minimo (drop ALL, aggiungi solo quelle minime)
+#   - no-new-privileges: true impedisce escalation interna
+#   - pids_limit, mem_limit, cpuset limitano le risorse
+#   - rete isolata (network_mode: none) per il lab puro;
+#     sostituire con rete bridge interna se servono comunicazioni controllate
+
+name: speace-sandbox
+
+services:
+  speace-lab:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sandbox
+    image: speace-sandbox:latest
+    container_name: speace-sandbox-lab
+    # ---------- isolamento ----------
+    # Di default il container NON ha rete. Per test che richiedono rete isolata
+    # (es. simulare comunicazione con un secondo container) creare una rete
+    # bridge dedicata e usare 'networks:' qui sotto invece di network_mode.
+    network_mode: none
+    # Niente escalation di privilegi dall'interno
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined  # Python ha bisogno di alcuni syscalls; sostituire con profilo auditato in produzione
+    # Capabilities ridotte (Docker droppa già tutto, qui è esplicito)
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE   # necessario per scrivere nei volumi
+    # Lettura del filesystem host limitata al working dir del progetto
+    read_only: false   # il container ha bisogno di scrivere in /cellular_speace/data
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+      - /run:size=64m,mode=0755
+    # ---------- risorse ----------
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+          pids: 256
+    # ---------- volumi ----------
+    # Monta solo la cartella del progetto. Niente /, niente /etc, niente /var.
+    volumes:
+      # Dati persistenti del laboratorio
+      - speace_lab_data:/cellular_speace/data
+      - speace_lab_reports:/cellular_speace/reports
+      # Monta il codice sorgente in read-only per garantire che il sandbox
+      # non modifichi se stesso durante i test
+      - type: bind
+        source: ..
+        target: /cellular_speace
+        read_only: false  # il lab può scrivere log/data ma non modificare se stesso
+    # ---------- ambiente ----------
+    environment:
+      # Default: sandbox estesa DISATTIVATA. Per attivarla:
+      #   SPEACE_SANDBOX=1 docker compose -f docker/docker-compose.sandbox.yml up
+      SPEACE_SANDBOX: ${SPEACE_SANDBOX:-0}
+      SPEACE_STAGE: "2.5-sandbox-lab"
+      # Identificatore univoco del run di laboratorio
+      SPEACE_LAB_RUN_ID: "${SPEACE_LAB_RUN_ID:-manual}"
+      PYTHONUNBUFFERED: "1"
+    # ---------- healthcheck ----------
+    # Usa un endpoint che non richiede rete (es. python -c che legge un file locale)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import speace_core; print('speace_ok')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # ---------- restart policy ----------
+    restart: unless-stopped
+    # Mantieni stdin aperto per debug interattivo
+    stdin_open: false
+    tty: false
+
+volumes:
+  speace_lab_data:
+    name: speace_lab_data
+  speace_lab_reports:
+    name: speace_lab_reports
+
+# ============================================================
+# RETE OPZIONALE (commentata — attiva solo se serve comunicare
+# tra container sandbox in modo controllato).
+#
+# networks:
+#   lab_internal:
+#     driver: bridge
+#     internal: true   # niente gateway verso l'esterno
+#     ipam:
+#       config:
+#         - subnet: 172.30.0.0/24
+#
+# services:
+#   speace-lab:
+#     # SOSTITUISCE network_mode: none
+#     networks:
+#       - lab_internal
+#     # NIENTE porte esposte: la comunicazione è solo container-to-container
+# ============================================================

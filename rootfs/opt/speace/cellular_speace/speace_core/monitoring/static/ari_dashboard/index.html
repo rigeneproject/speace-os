@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPEACE — ARI Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <span class="logo">⬢</span>
+            <div class="title-block">
+                <h1>SPEACE ARI Dashboard</h1>
+                <p class="subtitle">
+                    AGI Readiness Index — 8-axis weighted composite
+                </p>
+            </div>
+        </div>
+        <div class="status">
+            <span class="dot" id="conn-dot"></span>
+            <span id="conn-text">connecting…</span>
+            <span class="ts" id="last-update"></span>
+        </div>
+    </header>
+
+    <main>
+        <!-- ============== Headline ============== -->
+        <section class="hero">
+            <div class="card hero-ari">
+                <h2>ARI%</h2>
+                <div class="big-number" id="ari-percentage">–</div>
+                <div class="bar">
+                    <div class="bar-fill" id="ari-bar-fill"></div>
+                </div>
+                <div class="legend">
+                    Composite of 8 weighted axes
+                </div>
+            </div>
+            <div class="card hero-agi">
+                <h2>AGI% <span class="legacy">(legacy)</span></h2>
+                <div class="big-number alt" id="agi-percentage">–</div>
+                <div class="legend">Pre-ARI benchmark</div>
+            </div>
+            <div class="card hero-delta">
+                <h2>Δ Trend</h2>
+                <div class="big-number delta" id="ari-delta">–</div>
+                <div class="legend" id="ari-trend">across history window</div>
+            </div>
+        </section>
+
+        <!-- ============== 8 Components ============== -->
+        <section class="panel">
+            <header>
+                <h2>8 ARI Components</h2>
+                <p class="hint">Weighted contribution to ARI%</p>
+            </header>
+            <div class="bars" id="component-bars"></div>
+        </section>
+
+        <!-- ============== Radar + History ============== -->
+        <section class="grid-two">
+            <div class="panel">
+                <header>
+                    <h2>Radar</h2>
+                    <p class="hint">8-axis balance view</p>
+                </header>
+                <canvas id="radar-canvas" width="520" height="520"></canvas>
+            </div>
+            <div class="panel">
+                <header>
+                    <h2>Temporal history</h2>
+                    <p class="hint">ARI% over recent cycles</p>
+                </header>
+                <canvas id="line-canvas" width="900" height="380"></canvas>
+                <div class="legend-row">
+                    <span class="legend-dot ari"></span> ARI%
+                    <span class="legend-dot agi"></span> AGI% legacy
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== Cognitive Analysis ============== -->
+        <section class="panel">
+            <header>
+                <h2>Cognitive analysis</h2>
+                <p class="hint">7-dimension deep report (memory, reasoning, planning, learning, generalization, autonomy, adaptation)</p>
+            </header>
+            <div class="cog-overall">
+                <div class="cog-overall-block">
+                    <div class="cog-overall-label">Overall</div>
+                    <div class="cog-overall-score" id="cog-overall-score">–</div>
+                    <div class="cog-overall-verdict" id="cog-overall-verdict">–</div>
+                </div>
+                <div class="cog-overall-meta">
+                    <div><span class="meta-label">cycle</span> <span id="cog-cycle-id">–</span></div>
+                    <div><span class="meta-label">ARI%</span> <span id="cog-ari">–</span></div>
+                    <div><span class="meta-label">AGI% legacy</span> <span id="cog-agi">–</span></div>
+                    <div><span class="meta-label">timestamp</span> <span id="cog-ts">–</span></div>
+                </div>
+            </div>
+            <div class="cog-narrative" id="cog-narrative"></div>
+        </section>
+
+        <section class="cog-grid" id="cog-grid"></section>
+
+        <!-- ============== Summary ============== -->
+        <section class="panel">
+            <header>
+                <h2>Cognitive status (raw)</h2>
+                <p class="hint">Snapshot of last cycle</p>
+            </header>
+            <pre id="cog-status" class="code-block">loading…</pre>
+        </section>
+    </main>
+
+    <footer>
+        <span>port 5699 · read-only · localhost</span>
+        <span id="speace-version">v–</span>
+        <span id="server-uptime">uptime –</span>
+    </footer>
+
+    <script src="/static/ari_dashboard.js"></script>
+</body>
+</html>

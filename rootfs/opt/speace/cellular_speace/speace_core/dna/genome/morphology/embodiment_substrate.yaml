@@ -1,0 +1,26 @@
+# Sensorimotor embodiment substrate configuration for SPEACE morphology.
+# All embodiment features are disabled by default.
+
+embodiment:
+  enabled: false
+  description: "Sensorimotor loop: sensors -> environment model -> active inference -> actuator -> sensors"
+  sensors:
+    sampling_interval_ms: 1000
+    history_size: 1000
+  actuator:
+    allowed_directories:
+      - "data"
+      - "reports"
+      - "logs"
+      - "temp"
+    action_timeout_seconds: 5.0
+    safety_level: 3
+  monitor:
+    window_size: 100
+  active_inference:
+    states:
+      - stable
+      - unstable
+    actions:
+      - observe
+      - actuate

@@ -1,0 +1,11 @@
+#!/bin/sh
+# speace-os-status — mostra lo stato corrente del coordinatore cognitivo.
+# Usa lo script Python senza avviare il loop.
+
+set -eu
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+exec python3 -m os_coordinator --status

@@ -1,0 +1,65 @@
+#!/bin/sh
+# init — primo programma eseguito dal kernel (PID 1 del initramfs).
+# Deve essere uno script POSIX. Nella SPEACE OS, questo init fa solo
+# il bootstrap minimo: monta proc/sys/dev, esegue pivot_root al
+# rootfs reale, e lascia che os_coordinator (anch'esso PID 1 ma
+# adesso sotto il nuovo root) continui il ciclo di vita.
+
+# Nella nostra architettura, os_coordinator è il PID 1 nel rootfs
+# finale. Questo init nell'initramfs si limita a consegnare il
+# controllo al vero PID 1.
+
+set -eu
+
+echo "=================================================="
+echo " SPEACE OS — initramfs init"
+echo " $(date)"
+echo "=================================================="
+
+# Monta i filesystem virtuali essenziali
+mount -t proc none /proc || true
+mount -t sysfs none /sys || true
+mount -t devtmpfs none /dev || true
+mount -t tmpfs none /run || true
+mount -t tmpfs none /tmp || true
+
+# Cerca il rootfs reale. Convenzione: secondo parametro del kernel
+# (root=...) oppure /dev/sr0 (ISO) o /dev/vda (QCOW2).
+ROOT_DEVICE="${ROOT_DEVICE:-/dev/sr0}"
+if [ ! -b "${ROOT_DEVICE}" ]; then
+    ROOT_DEVICE="/dev/vda"
+fi
+if [ ! -b "${ROOT_DEVICE}" ]; then
+    ROOT_DEVICE="/dev/sda"
+fi
+
+echo "[init] rootfs candidate: ${ROOT_DEVICE}"
+
+# Attendi che il device sia pronto (max 5s)
+for i in 1 2 3 4 5; do
+    if [ -b "${ROOT_DEVICE}" ]; then
+        break
+    fi
+    echo "[init] aspetto ${ROOT_DEVICE}... (${i}/5)"
+    sleep 1
+done
+
+mkdir -p /newroot
+if mount -o ro "${ROOT_DEVICE}" /newroot 2>/dev/null; then
+    echo "[init] montato ${ROOT_DEVICE} in /newroot"
+else
+    echo "[init] WARN: impossibile montare ${ROOT_DEVICE}, resto in initramfs"
+    exec /bin/sh
+fi
+
+# Prepara pivot_root
+cd /newroot
+mkdir -p oldroot
+pivot_root . oldroot
+
+# Smonta i filesystem di boot
+umount /oldroot/proc /oldroot/sys /oldroot/dev /oldroot/run /oldroot/tmp 2>/dev/null || true
+
+# Esegui il vero init: os_coordinator
+echo "[init] consegno il controllo a /sbin/os_coordinator"
+exec /sbin/os_coordinator

@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------- #
+# BOOTSTRAP — SAFE MODE BY DEFAULT
+# ---------------------------------------------------------------------- #
+# The default mode of this bootstrap is SAFE: no autonomous shell
+# execution, no actuation, no replication, no network scanning.
+#
+# Stage 2.5 (Sandboxed Lab Autonomy) can optionally run this bootstrap
+# inside an isolated container/VM (see docker/) with extended
+# operational privileges (sandbox/sandbox_profile.yaml). To do that,
+# set the environment variable:
+#
+#     SPEACE_SANDBOX=1
+#
+# Even with SPEACE_SANDBOX=1, the bootstrap remains in safe mode unless
+# BOTH conditions are satisfied:
+#   1) the process is running inside the sandbox container, AND
+#   2) the operator has explicitly opted in.
+#
+# In ALL other cases, default_mode: safe applies and the bootstrap will
+# refuse any privilege escalation.
+# ---------------------------------------------------------------------- #
+speace_bootstrap_dna:
+  organism: SPEACE
+  bootstrap_version: "0.1.0"
+  repo: https://github.com/rigeneproject/cellular_speace
+  branch: main
+  allowed_modes:
+    - monitoring
+    - dialogue
+    - passive_sync
+    - controlled_runtime
+  forbidden_modes:
+    - autonomous_replication
+    - autonomous_shell_execution
+    - unsupervised_actuation
+    - credential_extraction
+    - network_scanning
+  node_identity:
+    generate_unique_node_id: true
+    require_human_pairing: true
+  safety:
+    default_mode: safe
+    localhost_only: true
+    require_approval_for_regulation: true

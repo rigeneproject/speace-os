@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Logs e state
+*.log
+/data/
+/reports/
+/memory/
+/rootfs/var/log/
+/rootfs/var/lib/
+/rootfs/var/run/
+*.log.*
+
+# Artefatti di build della distro
+/out/
+/build.log
+/*.iso
+/*.qcow2
+/*.img
+/*.raw
+/rootfs.tar.gz
+/initramfs.cpio.gz
+/kernel/bzImage
+/out/iso/
+/out/rootfs/
+/out/rootfs.tar.gz
+/out/speace-os-*.iso
+/out/speace-os-*.qcow2
+/out/speace-os-*.raw
+/out/rootfs.img
+/out/smoke-test.log
+
+# Kernel build artifacts
+/out/linux-*/
+*.o
+*.ko
+
+# Cellular_speace
+# Manteniamo il codice in rootfs/opt/speace/cellular_speace, ma ignoriamo:
+rootfs/opt/speace/cellular_speace/**/__pycache__/
+rootfs/opt/speace/cellular_speace/**/.pytest_cache/
+rootfs/opt/speace/cellular_speace/**/.ruff_cache/
+rootfs/opt/speace/cellular_speace/**/data/
+rootfs/opt/speace/cellular_speace/**/reports/
+rootfs/opt/speace/cellular_speace/**/memory/
+rootfs/opt/speace/cellular_speace/**/tests/data/
+rootfs/opt/speace/cellular_speace/sandbox/__pycache__/
+rootfs/opt/speace/cellular_speace/speace_core/**/__pycache__/
+rootfs/opt/speace/cellular_speace/evolution_daemon/**/__pycache__/
+rootfs/opt/speace/cellular_speace/speace_agi_team/**/__pycache__/
+rootfs/opt/speace/cellular_speace/**/_temp_*.txt
+rootfs/opt/speace/cellular_speace/**/*.pyc
+rootfs/opt/speace/cellular_speace/.coverage
+rootfs/opt/speace/cellular_speace/cov.json
+
+# File di Windows strani (artefatti di escape)
+*C:cellular_speace*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local

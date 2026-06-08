@@ -1,0 +1,218 @@
+name: build-distro
+
+# Build della distro SPEACE OS in tre formati:
+#   - speace-os-${{ steps.ver.outputs.v }}.iso        (avviabile in QEMU / USB)
+#   - speace-os-${{ steps.ver.outputs.v }}.qcow2      (KVM / QEMU)
+#   - rootfs.tar.gz                                    (rootfs standalone)
+#
+# Trigger:
+#   - push su main (modifiche a os_coordinator, rootfs, kernel, initramfs, iso, ci)
+#   - pull_request verso main
+#   - tag v*  (pubblica artefatti su Release)
+#   - manuale (workflow_dispatch)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'os_coordinator/**'
+      - 'rootfs/**'
+      - 'kernel/**'
+      - 'initramfs/**'
+      - 'iso/**'
+      - 'ci/**'
+      - 'cellular_speace/**'
+      - '.github/workflows/build-distro.yml'
+  pull_request:
+    branches: [main]
+  tags:
+    - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # per pubblicare su Release
+
+jobs:
+  test-coordinator:
+    name: Test os_coordinator
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: ver
+        run: echo "v=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install os_coordinator dependencies
+        working-directory: os_coordinator
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run os_coordinator tests
+        working-directory: os_coordinator
+        run: |
+          python -m pytest tests/ -v --tb=short
+
+      - name: Status snapshot (offline mode)
+        working-directory: os_coordinator
+        run: |
+          python -m os_coordinator --offline --status | tee status.json
+
+      - name: Upload status artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: os-coordinator-status
+          path: os_coordinator/status.json
+
+  build-distro:
+    name: Build ${{ matrix.target }} artifact
+    needs: test-coordinator
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [iso, qcow2, rootfs]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libelf-dev libssl-dev \
+            curl wget cpio gzip rsync xorriso grub-pc-bin grub-efi-amd64-bin \
+            qemu-utils mtools dosfstools
+
+      - name: Determine version
+        id: ver
+        run: echo "v=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Build (matrix target: ${{ matrix.target }})
+        run: |
+          chmod +x iso/build.sh iso/pack-iso.sh iso/pack-qcow2.sh iso/pack-rootfs.sh kernel/build-kernel.sh
+          case "${{ matrix.target }}" in
+            rootfs)
+              sudo ./iso/build.sh
+              ./iso/pack-rootfs.sh
+              ;;
+            iso)
+              sudo ./iso/build.sh
+              ./iso/pack-iso.sh
+              ;;
+            qcow2)
+              sudo ./iso/build.sh
+              ./iso/pack-qcow2.sh
+              ;;
+          esac
+
+      - name: List out/
+        run: ls -la out/ || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: speace-os-${{ steps.ver.outputs.v }}-${{ matrix.target }}
+          path: |
+            out/speace-os-*.iso
+            out/speace-os-*.qcow2
+            out/rootfs.tar.gz
+          if-no-files-found: warn
+
+  smoke-test-iso:
+    name: Smoke test ISO in QEMU
+    needs: build-distro
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: ver
+        run: echo "v=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: speace-os-${{ steps.ver.outputs.v }}-iso
+          path: dist/
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-x86
+
+      - name: Run smoke test
+        run: |
+          chmod +x ci/scripts/smoke-test-iso.sh
+          ISO_PATH=$(ls dist/*.iso | head -1)
+          echo "Testing ISO: ${ISO_PATH}"
+          ci/scripts/smoke-test-iso.sh "${ISO_PATH}"
+
+      - name: Upload smoke test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-log
+          path: smoke-test.log
+
+  publish-release:
+    name: Publish Release artifacts
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test-coordinator, build-distro, smoke-test-iso]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Determine version
+        id: ver
+        run: echo "v=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: SPEACE OS ${{ steps.ver.outputs.v }}
+          body: |
+            ## SPEACE OS ${{ steps.ver.outputs.v }}
+
+            Cognitive Operating System basata su Alpine 3.20 + cellular_speace
+            + os_coordinator (PID 1 cognitivo guidato da `minimax-m3:cloud`).
+
+            ### Artefatti
+
+            - `speace-os-*.iso` — immagine avviabile (QEMU, USB, CD)
+            - `speace-os-*.qcow2` — disco per KVM
+            - `rootfs.tar.gz` — rootfs standalone (chroot, installazione manuale)
+
+            ### Quick start
+
+            ```bash
+            # QEMU (3 GB RAM, 2 CPU)
+            qemu-system-x86_64 -m 3G -smp 2 -cdrom speace-os-*.iso
+
+            # Dopo il boot:
+            #   speace-os-status    # stato del coordinatore cognitivo
+            #   speace chat         # parla con l'organismo
+            #   speace monitor      # dashboard web (T101) su :8787
+            ```
+          files: |
+            release/**/*.iso
+            release/**/*.qcow2
+            release/**/*.tar.gz
+            release/**/rootfs.tar.gz
+          draft: false
+          prerelease: false

@@ -1,0 +1,21 @@
+    ____  ____  ____  _____ ____  _____           _       ____  ____
+   / ___||  _ \/ ___|| ____|  _ \|  ___|   ___   / \     / ___|/ ___|
+   \___ \| |_) \___ \|  _| | |_) | |_     ( _ ) / _ \   \___ \\___ \
+    ___) |  __/ ___) | |___|  _ <|  _|    / _ \/ ___ \   ___) |___) |
+   |____/|_|   |____/|_____|_| \_\_|      \___/_/   \_\ |____/|____/
+
+   Cognitive Operating System — version 0.1.0-cos (Alpine 3.20 base)
+
+   Benvenuto nell'organismo SPEACE. Il coordinatore cognitivo (PID 1) è in
+   esecuzione e supervisiona i seguenti servizi:
+
+     - speace-brain       : cervello cellulare (speace_core)
+     - speace-evolution   : demone auto-miglioramento (evolution_daemon)
+     - speace-agi-team    : team agentico (speace_agi_team, Ollama Cloud)
+     - speace-dashboard   : monitor FastAPI
+
+   Comandi utili:
+     speace-os-status      stato corrente del coordinatore
+     speace-os-init        riavvia la sequenza cognitiva (debug)
+     speace chat           parla con l'organismo (CLI)
+     speace monitor        monitor web su http://127.0.0.1:8787

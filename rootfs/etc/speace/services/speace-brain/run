@@ -1,0 +1,26 @@
+#!/bin/sh
+# speace-brain — cervello cellulare continuo (speace_core).
+# Esegue il runtime continuo 24/7 con monitor integrato (T109 in cellular_speace).
+
+set -eu
+
+CONF=/etc/speace/coordinator.yaml
+LOG=/var/log/speace/speace-brain.log
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+mkdir -p /var/log/speace
+
+cd "${SPEACE_CELLULAR}"
+
+echo "[speace-brain] avvio cervello cellulare (continuous runtime + monitor)"
+echo "[speace-brain] modello LLM: ${OLLAMA_MODEL:-<unset>}"
+echo "[speace-brain] endpoint: ${OLLAMA_ENDPOINT:-<unset>}"
+
+# Avvia il runtime continuo (T109) + monitor FastAPI (T101).
+# tick_interval 1.0 = 1 secondo/tick; ciclo di supervisione 300s.
+exec python3 -m speace_core.cli run \
+    --genome "${SPEACE_CELLULAR}/speace_core/dna/genome/default_genome.yaml" \
+    --tick-interval 1.0

@@ -1,0 +1,82 @@
+# Stage 2.5 — Sandbox Autonomy (laboratory)
+# Build: docker build -f docker/Dockerfile.sandbox -t speace-sandbox:latest .
+# Run:   docker compose -f docker/docker-compose.sandbox.yml up
+#
+# Perimetro: cellular_speace montato come /cellular_speace.
+# Niente --privileged, niente device passthrough, rete isolata.
+# SPEACE gira con utente non-root di default. La modalità sandbox
+# estesa si attiva con SPEACE_SANDBOX=1 (vedi sandbox/sandbox_profile.yaml).
+
+FROM python:3.12-slim AS base
+
+# Metadata
+LABEL org.opencontainers.image.title="speace-sandbox"
+LABEL org.opencontainers.image.description="SPEACE Stage 2.5 sandbox autonomy lab container"
+LABEL org.opencontainers.image.source="https://github.com/rigeneproject/cellular_speace"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Disabilita pip cache e bytecode generation per immagini più piccole
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    # Perimetro sandbox: dichiara esplicitamente che siamo in modalità lab
+    SPEACE_STAGE="2.5-sandbox-lab" \
+    SPEACE_SANDBOX=0
+
+# Crea utente non-root dedicato a SPEACE dentro al container
+# (root nel container non significa root sull'host: Docker lo isola)
+RUN groupadd --system --gid 1001 speace && \
+    useradd --system --uid 1001 --gid speace --home-dir /cellular_speace --shell /bin/bash speace
+
+# Installa solo le dipendenze minime necessarie al runtime sandbox
+# (niente psutil sensors, niente GUI, niente driver)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        tini && \
+    rm -rf /var/lib/apt/lists/*
+
+# WORKDIR è la cartella dell'organismo
+WORKDIR /cellular_speace
+
+# Copia manifest prima del codice per sfruttare la cache dei layer Docker
+COPY pyproject.toml README.md ./
+
+# Installa SPEACE e dipendenze lab (no embodiment psutil lato host)
+RUN pip install --no-cache-dir -e ".[monitoring,dev]"
+
+# Copia il codice sorgente e gli script
+COPY speace_core/ ./speace_core/
+COPY scripts/ ./scripts/
+COPY sandbox/ ./sandbox/
+COPY docker/entrypoint_sandbox.sh /usr/local/bin/entrypoint_sandbox.sh
+
+# Prepara le directory dati con permessi corretti
+RUN mkdir -p \
+        data/sandbox \
+        data/runtime \
+        data/monitoring \
+        reports/sandbox && \
+    chown -R speace:speace /cellular_speace
+
+# Permessi corretti sull'entrypoint
+RUN chmod 0755 /usr/local/bin/entrypoint_sandbox.sh
+
+# Volume dati persistente (fuori da WORKDIR per non sporcare il codice)
+VOLUME ["/cellular_speace/data", "/cellular_speace/reports"]
+
+# Documenta le porte solo a scopo informativo; sono comunque disabilitate
+# da network_mode: none nel compose.
+# EXPOSE non apre porte se network è disabilitata.
+EXPOSE 8787
+
+# Switch a utente non-root di default.
+# Per attivare la modalità sandbox estesa: docker run -e SPEACE_SANDBOX=1 ...
+USER speace
+
+# tini = PID 1 corretto, gestisce segnali e zombie reaping
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint_sandbox.sh"]
+
+# Default command: avvia SPEACE in monitor mode (safe by default)
+CMD ["speace", "monitor"]

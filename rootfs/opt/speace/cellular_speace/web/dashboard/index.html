@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPEACE Local Organism Monitor</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>SPEACE Local Organism Monitor</h1>
+      <span class="meta" id="header-meta">v0.0.0 | uptime: 0s</span>
+    </div>
+    <div>
+      <span class="status" id="conn-status"></span>
+      <span class="meta" id="conn-text">connecting</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Body State -->
+    <section class="panel" id="panel-body">
+      <h2>Body State</h2>
+      <div class="sensor-grid">
+        <div class="gauge">
+          <div class="gauge-label">CPU</div>
+          <div class="gauge-value" id="b-cpu">0%</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-cpu" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">RAM</div>
+          <div class="gauge-value" id="b-ram">0 GB</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-ram" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Disk</div>
+          <div class="gauge-value" id="b-disk">0 GB</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-disk" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Network</div>
+          <div class="gauge-value" id="b-net">0 B</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-net" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Temp</div>
+          <div class="gauge-value" id="b-temp">0 C</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-temp" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Battery</div>
+          <div class="gauge-value" id="b-batt">0%</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="bb-batt" style="width:0%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cognitive State -->
+    <section class="panel" id="panel-cognition">
+      <h2>Cognitive State</h2>
+      <div class="info-row"><span class="info-key">Global State</span><span class="info-val" id="c-gw">—</span></div>
+      <div class="info-row"><span class="info-key">Attention Focus</span><span class="info-val" id="c-focus">—</span></div>
+      <div class="info-row"><span class="info-key">Awareness Level</span><span class="info-val" id="c-awareness">0.00</span></div>
+      <div class="info-row"><span class="info-key">Developmental Stage</span><span class="info-val" id="c-stage">—</span></div>
+      <div class="info-row"><span class="info-key">Coherence Phi</span><span class="info-val" id="c-phi">0.00</span></div>
+      <div class="info-row"><span class="info-key">Active Goals</span><span class="info-val" id="c-goals">—</span></div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Narrative Trace</h3>
+      <ul class="narrative-list" id="c-narrative"></ul>
+    </section>
+
+    <!-- Dynamic Stability -->
+    <section class="panel" id="panel-dynamics">
+      <h2>Dynamic Stability</h2>
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="label">Chaos</div>
+          <div class="value" id="d-chaos">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Rigidity</div>
+          <div class="value" id="d-rigidity">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Drift</div>
+          <div class="value" id="d-drift">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Attractors</div>
+          <div class="value" id="d-attractors">0</div>
+        </div>
+      </div>
+      <div class="info-row" style="margin-top:0.5rem;">
+        <span class="info-key">Branching Ratio</span>
+        <span class="info-val" id="d-branching">0.00</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Near Critical</span>
+        <span class="info-val" id="d-critical">false</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Last Intervention</span>
+        <span class="info-val" id="d-intervention">—</span>
+      </div>
+    </section>
+
+    <!-- Prediction Error -->
+    <section class="panel" id="panel-prediction">
+      <h2>Prediction Error</h2>
+      <div class="info-row"><span class="info-key">Prediction Accuracy</span><span class="info-val" id="p-acc">0.00</span></div>
+      <div class="info-row"><span class="info-key">Prediction Error</span><span class="info-val" id="p-err">0.00</span></div>
+      <div class="info-row"><span class="info-key">Last Predicted State</span><span class="info-val" id="p-pred">—</span></div>
+      <div class="info-row"><span class="info-key">Last Actual State</span><span class="info-val" id="p-actual">—</span></div>
+    </section>
+
+    <!-- Embodiment -->
+    <section class="panel" id="panel-embodiment">
+      <h2>Embodiment</h2>
+      <div class="info-row"><span class="info-key">Embodiment Depth</span><span class="info-val" id="e-depth">0.00</span></div>
+      <div class="info-row"><span class="info-key">Loop Latency</span><span class="info-val" id="e-latency">0 ms</span></div>
+      <div class="info-row"><span class="info-key">Action Success Rate</span><span class="info-val" id="e-success">0.00</span></div>
+      <div class="info-row"><span class="info-key">Sensor Status</span><span class="info-val" id="e-sensor">unknown</span></div>
+      <div class="info-row"><span class="info-key">Actuator Status</span><span class="info-val" id="e-actuator">unknown</span></div>
+    </section>
+
+    <!-- Distributed Identity -->
+    <section class="panel" id="panel-identity">
+      <h2>Distributed Identity</h2>
+      <div class="info-row"><span class="info-key">Node Count</span><span class="info-val" id="i-count">0</span></div>
+      <div class="info-row"><span class="info-key">Consensus Hash</span><span class="info-val" id="i-hash">—</span></div>
+      <div class="info-row"><span class="info-key">Divergence Detected</span><span class="info-val" id="i-divergence">false</span></div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Nodes</h3>
+      <ul class="node-list" id="i-nodes"></ul>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Narrative Sync</h3>
+      <ul class="narrative-list" id="i-narrative"></ul>
+    </section>
+
+    <!-- T106 — Personality Drift -->
+    <section class="panel" id="panel-personality">
+      <h2>Personality Drift</h2>
+      <div class="score-grid" style="margin-bottom:0.75rem;">
+        <div class="score-card">
+          <div class="label">Drive</div>
+          <div class="value" id="pd-drive">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Self-model</div>
+          <div class="value" id="pd-self">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Narrative</div>
+          <div class="value" id="pd-narrative">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Decisional</div>
+          <div class="value" id="pd-decisional">0.00</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Overall Drift</span>
+        <span class="info-val" id="pd-overall">0.00</span>
+      </div>
+    </section>
+
+    <!-- Autonomous Drives -->
+    <section class="panel" id="panel-drives">
+      <h2>Autonomous Drives</h2>
+      <div class="info-row"><span class="info-key">Action Tendency</span><span class="info-val" id="dr-tendency">idle</span></div>
+      <div class="info-row"><span class="info-key">Dominant Drive</span><span class="info-val" id="dr-dominant">—</span></div>
+      <div class="drive-list" id="dr-list"></div>
+    </section>
+
+    <!-- Safety / Governance -->
+    <section class="panel" id="panel-safety">
+      <h2>Safety / Governance <span class="badge" id="s-badge">low</span></h2>
+      <div class="info-row"><span class="info-key">Governance Mode</span><span class="info-val" id="s-mode">observation_only</span></div>
+      <div class="info-row"><span class="info-key">Revert Available</span><span class="info-val" id="s-revert">false</span></div>
+      <div class="info-row"><span class="info-key">Pending Patches</span><span class="info-val" id="s-patches">0</span></div>
+      <div class="info-row"><span class="info-key">Blocked Actions</span><span class="info-val" id="s-blocked">0</span></div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Recent Flags</h3>
+      <ul class="narrative-list" id="s-flags"></ul>
+    </section>
+
+    <!-- Anomaly Panel -->
+    <section class="panel" id="panel-anomaly">
+      <h2>Anomaly Panel <span class="badge" id="a-badge">normal</span></h2>
+      <div class="info-row"><span class="info-key">Overall Status</span><span class="info-val" id="a-status">normal</span></div>
+      <div class="info-row"><span class="info-key">Anomaly Count</span><span class="info-val" id="a-count">0</span></div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Active Anomalies</h3>
+      <ul class="anomaly-list" id="a-list"></ul>
+    </section>
+
+    <!-- T105 — Longitudinal Memory -->
+    <section class="panel panel-grid-2" id="panel-longitudinal">
+      <h2>Longitudinal Memory</h2>
+      <div class="history-controls">
+        <select id="lm-metric">
+          <option value="coherence_phi">Coherence Phi</option>
+          <option value="chaos_score">Chaos</option>
+          <option value="rigidity_score">Rigidity</option>
+          <option value="drift">Drift</option>
+          <option value="prediction_error">Prediction Error</option>
+          <option value="branching_ratio">Branching Ratio</option>
+          <option value="health_score">Health Score</option>
+          <option value="safety_risk">Safety Risk</option>
+          <option value="drive_instability">Drive Instability</option>
+          <option value="identity_divergence">Identity Divergence</option>
+          <option value="cpu">CPU</option>
+          <option value="memory_bytes">Memory</option>
+        </select>
+        <select id="lm-hours">
+          <option value="1">1h</option>
+          <option value="6">6h</option>
+          <option value="24" selected>24h</option>
+          <option value="168">7d</option>
+        </select>
+      </div>
+      <div class="sparkline-container" id="lm-sparkline"></div>
+      <div class="info-row">
+        <span class="info-key">Trend</span>
+        <span class="info-val" id="lm-trend">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Data Points</span>
+        <span class="info-val" id="lm-points">0</span>
+      </div>
+    </section>
+
+    <!-- T102 — Alert Panel -->
+    <section class="panel panel-grid-2" id="panel-alerts">
+      <h2>Alert Telemetry <span class="badge" id="al-badge">normal</span></h2>
+      <div class="score-grid" style="margin-bottom:0.75rem;">
+        <div class="score-card">
+          <div class="label">Health Score (Φ/ΔD)</div>
+          <div class="value" id="al-health">0.00</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Active Alerts</div>
+          <div class="value" id="al-count">0</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Critical</div>
+          <div class="value" id="al-critical">0</div>
+        </div>
+        <div class="score-card">
+          <div class="label">Warning</div>
+          <div class="value" id="al-warning">0</div>
+        </div>
+      </div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Event Timeline</h3>
+      <ul class="anomaly-list" id="al-timeline"></ul>
+    </section>
+
+    <!-- T104 — Regulation Proposals -->
+    <section class="panel panel-grid-2" id="panel-regulation">
+      <h2>Regulation Proposals <span class="badge" id="rp-badge">0</span></h2>
+      <div class="info-row">
+        <span class="info-key">Pending</span>
+        <span class="info-val" id="rp-pending">0</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Confidence (latest)</span>
+        <span class="info-val" id="rp-confidence">—</span>
+      </div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Pending Proposals</h3>
+      <ul class="anomaly-list" id="rp-list"></ul>
+    </section>
+
+    <!-- T107 — Dialogue -->
+    <section class="panel panel-grid-2" id="panel-dialogue">
+      <h2>Dialogue</h2>
+      <div id="dl-messages" style="height:140px; overflow-y:auto; background:var(--bg-card); border:1px solid var(--border); border-radius:4px; padding:0.5rem; font-size:0.75rem; margin-bottom:0.5rem;"></div>
+      <div style="display:flex; gap:0.5rem;">
+        <input type="text" id="dl-input" placeholder="Message SPEACE..." style="flex:1; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.5rem; font-family:var(--font-mono); font-size:0.75rem;">
+        <button id="dl-send" style="background:var(--bg-card); color:var(--accent-cyan); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:0.7rem; cursor:pointer;">Send</button>
+      </div>
+    </section>
+
+    <!-- T108 — Experiential Continuity -->
+    <section class="panel panel-grid-2" id="panel-experience">
+      <h2>Experiential Continuity</h2>
+      <div class="info-row"><span class="info-key">Known Humans</span><span class="info-val" id="ex-humans">0</span></div>
+      <div class="info-row"><span class="info-key">Last Human</span><span class="info-val" id="ex-last-human">—</span></div>
+      <div class="info-row"><span class="info-key">Last Topic</span><span class="info-val" id="ex-last-topic">—</span></div>
+      <div class="info-row"><span class="info-key">Session Staleness</span><span class="info-val" id="ex-stale">—</span></div>
+      <div class="info-row"><span class="info-key">Resume Narrative</span><span class="info-val" id="ex-resume" style="font-size:0.7rem; white-space:normal; line-height:1.3;">—</span></div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Recent Narrative</h3>
+      <ul class="narrative-list" id="ex-timeline"></ul>
+    </section>
+
+    <!-- T109 — Organism Runtime -->
+    <section class="panel panel-grid-2" id="panel-runtime">
+      <h2>Organism Runtime <span class="badge" id="rt-badge">off</span></h2>
+      <div class="info-row"><span class="info-key">State</span><span class="info-val" id="rt-state">not running</span></div>
+      <div class="info-row"><span class="info-key">Phase</span><span class="info-val" id="rt-phase">—</span></div>
+      <div class="info-row"><span class="info-key">Tick</span><span class="info-val" id="rt-tick">0</span></div>
+      <div class="info-row"><span class="info-key">Uptime</span><span class="info-val" id="rt-uptime">0s</span></div>
+      <div class="info-row"><span class="info-key">Runtime Health</span><span class="info-val" id="rt-health">—</span></div>
+      <div class="info-row"><span class="info-key">Jitter</span><span class="info-val" id="rt-jitter">—</span></div>
+      <div class="info-row"><span class="info-key">Latency</span><span class="info-val" id="rt-latency">—</span></div>
+      <div class="info-row"><span class="info-key">Lifecycle</span><span class="info-val" id="rt-lifecycle">—</span></div>
+      <div class="info-row"><span class="info-key">Brainstem</span><span class="info-val" id="rt-brainstem">—</span></div>
+      <div class="info-row"><span class="info-key">Halt</span><span class="info-val" id="rt-halt">—</span></div>
+      <div style="display:flex; gap:0.5rem; margin-top:0.5rem; flex-wrap:wrap;">
+        <button id="rt-btn-pause" style="background:var(--bg-card); color:var(--accent-yellow); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:0.7rem; cursor:pointer;">Pause</button>
+        <button id="rt-btn-resume" style="background:var(--bg-card); color:var(--accent-green); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:0.7rem; cursor:pointer;">Resume</button>
+        <button id="rt-btn-halt" style="background:var(--bg-card); color:var(--accent-red); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:0.7rem; cursor:pointer;">Halt</button>
+        <button id="rt-btn-cp" style="background:var(--bg-card); color:var(--accent-cyan); border:1px solid var(--border); border-radius:3px; padding:0.35rem 0.6rem; font-family:var(--font-mono); font-size:0.7rem; cursor:pointer;">Checkpoint</button>
+      </div>
+      <h3 style="font-size:0.7rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Recent Checkpoints</h3>
+      <ul class="narrative-list" id="rt-checkpoints"></ul>
+    </section>
+  </main>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

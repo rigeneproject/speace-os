@@ -1,0 +1,82 @@
+# Multi-Body Embodiment Substrate — enables SPEACE to inhabit multiple physical bodies.
+# All features are disabled by default.
+
+morphology:
+  multi_body_embodiment:
+    enabled: false
+    description: "Registry, routing and coordination across robot, IoT, edge, cloud and host bodies"
+
+    body_registry:
+      enabled: false
+      description: "Catalog of available bodies with capabilities and health scores"
+      storage_path: "data/embodiment/body_registry.jsonl"
+      supported_types:
+        - robot
+        - iot
+        - edge
+        - cloud_clone
+        - host
+
+    body_router:
+      enabled: false
+      description: "Routes sensorimotor commands to the appropriate body"
+      simulated_protocol: true
+      future_transports:
+        - mqtt
+        - websocket
+        - http
+
+    cross_body_sensorimotor_coordinator:
+      enabled: false
+      description: "Coordinates sensorimotor loops across all registered bodies"
+      history_limit: 1000
+      stress_threshold_z: 2.0
+      step_dt: 1.0
+
+    default_capabilities:
+      host:
+        sensors:
+          - cpu_sensor
+          - memory_sensor
+          - disk_sensor
+          - network_sensor
+          - temperature_sensor
+        actuators:
+          - file_writer
+          - executor
+      robot:
+        sensors:
+          - camera
+          - motion_sensor
+          - proximity_sensor
+          - battery_sensor
+        actuators:
+          - motor
+          - speaker
+          - gripper
+      iot:
+        sensors:
+          - temperature_sensor
+          - humidity_sensor
+          - light_sensor
+          - pressure_sensor
+        actuators:
+          - switch
+          - dimmer
+      edge:
+        sensors:
+          - temperature_sensor
+          - network_sensor
+          - load_sensor
+        actuators:
+          - scaler
+          - rerouter
+      cloud_clone:
+        sensors:
+          - load_sensor
+          - cost_sensor
+          - latency_sensor
+        actuators:
+          - scaler
+          - migrator
+          - snapshotter

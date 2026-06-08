@@ -1,0 +1,35 @@
+# os_coordinator — configurazione del PID 1 cognitivo.
+# Letto da /etc/speace/coordinator.yaml all'avvio della fase IGNITION.
+
+heartbeat_interval_sec: 5.0
+cognition_tick_sec: 30.0
+idle_tick_sec: 10.0
+ai_consult_every_n_ticks: 6
+
+# Servizi gestiti: il coordinatore conosce già la lista canonica
+# (speace-brain, speace-evolution, speace-agi-team, speace-dashboard).
+# Qui si esprime solo la *policy* di supervisione.
+
+services:
+  speace-brain:
+    critical: true           # se muore, l'agente AI deve intervenire
+    auto_restart: true
+    max_restarts_per_hour: 6
+  speace-evolution:
+    critical: false
+    auto_restart: true
+    max_restarts_per_hour: 3
+  speace-agi-team:
+    critical: false
+    auto_restart: true
+    max_restarts_per_hour: 3
+  speace-dashboard:
+    critical: false
+    auto_restart: true
+    max_restarts_per_hour: 6
+
+# Quando chiedere all'AI di intervenire (oltre la soglia di salute).
+intervention_triggers:
+  coherence_phi_below: 0.05
+  ilf_below: 0.10
+  failed_service_count_above: 1

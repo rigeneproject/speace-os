@@ -1,0 +1,12 @@
+NAME="SPEACE OS"
+VERSION="0.1.0-cos"
+ID=speace-os
+ID_LIKE=alpine
+PRETTY_NAME="SPEACE OS 0.1.0 (Cognitive Operating System)"
+VERSION_ID=0.1.0
+HOME_URL="https://github.com/rigeneproject/speace-os"
+DOCUMENTATION_URL="https://github.com/rigeneproject/speace-os/blob/main/docs/ARCHITECTURE.md"
+SUPPORT_URL="https://github.com/rigeneproject/speace-os/issues"
+BUG_REPORT_URL="https://github.com/rigeneproject/speace-os/issues"
+SPEACE_STAGE="cognitive-os-0.1"
+SPEACE_BASE="alpine-3.20"

@@ -1,0 +1,1 @@
+# ARC-AGI benchmark package

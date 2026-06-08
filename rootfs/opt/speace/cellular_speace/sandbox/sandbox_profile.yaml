@@ -1,0 +1,62 @@
+sandbox_profile:
+  name: "lab_sandbox"
+  version: "0.1.0"
+  description: >
+    Profilo che estende le capacità dell'EmbodiedActionActuator per test
+    in ambiente isolato (Stage 2.5). Da attivare ESCLUSIVAMENTE quando
+    SPEACE gira in un container/VM isolato e SOLO se la variabile
+    d'ambiente SPEACE_SANDBOX=1 è settata.
+
+  activation:
+    required_env: "SPEACE_SANDBOX=1"
+    opt_in: true
+    persistent_log: "data/sandbox/activations.jsonl"
+    log_fields:
+      - timestamp
+      - event
+      - run_id
+      - stage
+      - user
+      - in_container
+
+  # Estensioni concesse SOLO nel profilo sandbox.
+  # NB: queste estensioni sono aggiunte a quelle standard, non le sostituiscono.
+  extended_capabilities:
+    actuator:
+      # Permessi aggiuntivi sui path: SOLO dentro la root del container.
+      # Le ALLOWED_SUBDIRS standard restano attive.
+      additional_allowed_subdirs: []   # nessuna root, solo subdir whitelisted
+      additional_allowed_cmd_patterns:
+        - "^ls\\s+"
+        - "^pwd\\s*$"
+        - "^whoami\\s*$"
+        - "^date\\s*$"
+        - "^env\\s*$"
+        - "^python\\s+-c\\s+"
+        - "^pytest\\s+"
+      # Comandi bloccati INDIPENDENTEMENTE dal profilo (redundant safety)
+      always_blocked_fragments:
+        - "rm -rf /"
+        - "del /f /s /q C:\\Windows"
+        - "format "
+        - "dd if="
+        - "mkfs"
+        - "sudo"
+        - ":(){:|:&};:"
+
+  # Cosa NON viene MAI abilitato dal profilo sandbox
+  hard_limits:
+    no_network_bind_outside_container: true
+    no_host_filesystem_access: true
+    no_device_passthrough: true
+    no_kernel_module_load: true
+    no_raw_disk_access: true
+    no_process_injection: true
+
+  # Audit: ogni azione del profilo deve essere loggata
+  audit:
+    log_path: "data/sandbox/audit.jsonl"
+    log_every_action: true
+    include_params: true
+    include_risk_score: true
+    include_governance_decision: true

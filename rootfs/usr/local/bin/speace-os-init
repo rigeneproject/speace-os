@@ -1,0 +1,24 @@
+#!/bin/sh
+# speace-os-init — wrapper di avvio cognitivo per debug/riavvio manuale.
+# In condizioni normali, questo script non viene invocato: il PID 1
+# (os_coordinator) gestisce l'intero ciclo di vita. Usare solo per
+# test, debugging, o per forzare una ri-accensione da shell.
+
+set -eu
+
+CONF=/etc/speace/coordinator.yaml
+LOG=/var/log/speace/coordinator.log
+
+mkdir -p /var/log/speace /var/lib/speace
+
+if [ -f /etc/speace/env.conf ]; then
+    . /etc/speace/env.conf
+fi
+
+if [ "${1:-}" = "--dry-run" ]; then
+    echo "[speace-os-init] modalità dry-run: nessuna azione reale"
+    exec python3 -m os_coordinator --dry-run --offline --log-file "$LOG"
+fi
+
+echo "[speace-os-init] avvio coordinatore cognitivo in background..."
+exec python3 -m os_coordinator --config "$CONF" --log-file "$LOG"

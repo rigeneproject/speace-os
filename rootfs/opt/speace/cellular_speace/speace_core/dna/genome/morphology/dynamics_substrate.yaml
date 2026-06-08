@@ -1,0 +1,98 @@
+# Continuous dynamics substrate configuration for SPEACE morphology.
+# Each module is disabled by default and can be enabled via orchestrator flags.
+
+dynamics:
+  temporal_dynamics:
+    enabled: false
+    description: "Coupled first-order ODEs for activation, synaptic weight and metabolic energy"
+    parameters:
+      tau: 1.0
+      tau_w: 10.0
+      tau_e: 5.0
+      noise_std: 0.0
+      supply: 0.1
+      consumption: 0.05
+      plasticity_rate: 0.05
+      weight_bounds: [0.0, 1.0]
+      energy_bounds: [0.0, 1.0]
+
+  neural_oscillator:
+    enabled: false
+    description: "Bank of neural oscillators for theta, alpha, beta and gamma bands"
+    parameters:
+      bands:
+        theta:
+          freq: 5.0
+          amplitude: 1.0
+        alpha:
+          freq: 10.0
+          amplitude: 1.0
+        beta:
+          freq: 20.0
+          amplitude: 1.0
+        gamma:
+          freq: 40.0
+          amplitude: 1.0
+
+  phase_coupling:
+    enabled: false
+    description: "Kuramoto-like phase-coupling engine for oscillator synchrony"
+    parameters:
+      default_coupling_strength: 1.0
+
+  energy_field:
+    enabled: false
+    description: "Continuous distributed energy/metabolic field over neurons"
+    parameters:
+      global_supply_rate: 0.02
+      recovery_boost: 0.03
+      fatigue_threshold: 0.2
+      max_energy: 1.0
+      min_energy: 0.0
+
+  predictive_coding:
+    enabled: false
+    description: "Hierarchical predictive coding engine (sensory -> association -> abstract)"
+    parameters:
+      learning_rate: 0.1
+      layer_names:
+        sensory: 0
+        association: 1
+        abstract: 2
+
+  active_inference:
+    enabled: false
+    description: "Discrete-state active inference engine for action selection"
+    parameters: {}
+
+  homeostatic_drive:
+    enabled: false
+    description: "Global homeostatic drive system that modulates brain parameters"
+    parameters:
+      drives:
+        exploration:
+          setpoint: 0.5
+          weight: 1.0
+        stability:
+          setpoint: 0.5
+          weight: 1.0
+        survival:
+          setpoint: 0.2
+          weight: 1.5
+        efficiency:
+          setpoint: 0.6
+          weight: 1.0
+      plasticity_range: [0.0, 2.0]
+      exploration_range: [0.0, 2.0]
+      energy_supply_range: [0.5, 1.5]
+      stability_range: [0.5, 1.5]
+      survival_suppression_threshold: 0.3
+      efficiency_plasticity_threshold: -0.2
+
+  criticality_monitor:
+    enabled: false
+    description: "Monitor neural criticality via avalanche statistics"
+    parameters:
+      avalanche_window: 10.0
+      branching_bin_size: 5.0
+      max_history: 10000

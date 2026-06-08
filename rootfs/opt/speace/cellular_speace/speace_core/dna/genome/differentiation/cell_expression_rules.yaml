@@ -1,0 +1,76 @@
+expression_rules:
+  digital_neuron:
+    role: digital_neuron
+    express:
+      - signal_processing
+      - memory_trace
+      - plasticity
+    threshold_defaults:
+      threshold: 0.5
+      plasticity_rate: 0.05
+  digital_astrocyte:
+    role: digital_astrocyte
+    express:
+      - energy_regulation
+      - noise_suppression
+      - overload_detection
+    threshold_defaults:
+      overload_threshold: 0.85
+      noise_suppression_rate: 0.2
+  digital_microglia:
+    role: digital_microglia
+    express:
+      - anomaly_detection
+      - quarantine
+      - pruning
+    threshold_defaults:
+      prune_threshold: 0.1
+      quarantine_error_limit: 10
+  digital_oligodendrocyte:
+    role: digital_oligodendrocyte
+    express:
+      - pathway_optimization
+      - latency_reduction
+      - energy_efficiency
+    threshold_defaults:
+      myelination_success_threshold: 0.8
+      latency_reduction: 0.3
+  auditory_neuron:
+    role: auditory_neuron
+    express:
+      - phoneme_processing
+      - temporal_sequence
+      - auditory_attention
+    threshold_defaults:
+      threshold: 0.4
+      plasticity_rate: 0.06
+      phoneme_sensitivity: 0.7
+  broca_neuron:
+    role: broca_neuron
+    express:
+      - grammatical_structuring
+      - symbolic_production
+      - sequence_planning
+    threshold_defaults:
+      threshold: 0.5
+      plasticity_rate: 0.07
+  wernicke_neuron:
+    role: wernicke_neuron
+    express:
+      - semantic_comprehension
+      - symbolic_mapping
+      - context_integration
+    threshold_defaults:
+      threshold: 0.45
+      plasticity_rate: 0.08
+      comprehension_strength: 0.6
+  semantic_pointer_neuron:
+    role: semantic_pointer_neuron
+    express:
+      - symbolic_binding
+      - assembly_pointer
+      - grounding_link
+    threshold_defaults:
+      threshold: 0.3
+      plasticity_rate: 0.1
+      binding_strength: 0.0

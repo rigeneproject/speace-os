@@ -1,0 +1,35 @@
+morphology:
+  allowed_cell_types:
+    - digital_neuron
+    - digital_synapse
+    - digital_astrocyte
+    - digital_microglia
+    - digital_oligodendrocyte
+    - sensor_cell
+    - actuator_cell
+    - energy_cell
+    - blockchain_cell
+    - industrial_cell
+    - laboratory_cell
+    - auditory_neuron
+    - broca_neuron
+    - wernicke_neuron
+    - semantic_pointer_neuron
+  allowed_tissues:
+    - cognitive_tissue
+    - sensory_tissue
+    - motor_tissue
+    - immune_tissue
+    - energy_tissue
+    - trust_tissue
+    - experimental_tissue
+  organs:
+    - digital_brain
+    - sensory_network
+    - motor_execution_layer
+    - immune_safety_layer
+    - energy_metabolism_layer
+    - blockchain_trust_layer
+    - laboratory_interface
+    - industrial_interface
+    - planetary_observation_layer

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPEACE Organismic Monitor</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>SPEACE Organismic Monitor</h1>
+      <span class="meta" id="header-meta">v0.0.0 | uptime: 0s</span>
+    </div>
+    <div>
+      <span class="status" id="conn-status"></span>
+      <span class="meta" id="conn-text">connecting</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- System Overview -->
+    <section class="panel panel-grid-2">
+      <h2>System Overview</h2>
+      <div class="overview-cards">
+        <div class="card">
+          <div class="label">Coherence Phi</div>
+          <div class="value blue" id="ov-coherence">0.00</div>
+        </div>
+        <div class="card">
+          <div class="label">Mean Energy</div>
+          <div class="value green" id="ov-energy">0.00</div>
+        </div>
+        <div class="card">
+          <div class="label">Active Neurons</div>
+          <div class="value yellow" id="ov-neurons">0</div>
+        </div>
+        <div class="card">
+          <div class="label">Tick Count</div>
+          <div class="value blue" id="ov-ticks">0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sensor Panel -->
+    <section class="panel">
+      <h2>Sensor Panel</h2>
+      <div class="sensor-grid">
+        <div class="gauge">
+          <div class="gauge-label">CPU</div>
+          <div class="gauge-value" id="s-cpu">0%</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="b-cpu" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Memory</div>
+          <div class="gauge-value" id="s-mem">0%</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="b-mem" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Temperature</div>
+          <div class="gauge-value" id="s-temp">0 C</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="b-temp" style="width:0%"></div></div>
+        </div>
+        <div class="gauge">
+          <div class="gauge-label">Network</div>
+          <div class="gauge-value" id="s-net">0 B</div>
+          <div class="gauge-bar"><div class="gauge-bar-inner green" id="b-net" style="width:0%"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Drive Panel -->
+    <section class="panel">
+      <h2>Drive Panel</h2>
+      <div class="drive-list" id="drive-list"></div>
+    </section>
+
+    <!-- Workspace Panel -->
+    <section class="panel">
+      <h2>Workspace Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Global State</span>
+        <span class="info-val" id="ws-state">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Attention Focus</span>
+        <span class="info-val" id="ws-focus">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Awareness Level</span>
+        <span class="info-val" id="ws-awareness">0.00</span>
+      </div>
+    </section>
+
+    <!-- Self-Model Panel -->
+    <section class="panel">
+      <h2>Self-Model Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Identity Signature</span>
+        <span class="info-val" id="sm-sig">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Developmental Stage</span>
+        <span class="info-val" id="sm-stage">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Coherence</span>
+        <span class="info-val" id="sm-coherence">0.00</span>
+      </div>
+      <h3 style="font-size:0.75rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Narrative Trace</h3>
+      <ul class="narrative-list" id="sm-narrative"></ul>
+    </section>
+
+    <!-- Embodiment Panel -->
+    <section class="panel">
+      <h2>Embodiment Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Depth</span>
+        <span class="info-val" id="emb-depth">0.00</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Loop Latency</span>
+        <span class="info-val" id="emb-latency">0 ms</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Prediction Accuracy</span>
+        <span class="info-val" id="emb-pred">0.00</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Action Success Rate</span>
+        <span class="info-val" id="emb-action">0.00</span>
+      </div>
+    </section>
+
+    <!-- Distributed Panel -->
+    <section class="panel">
+      <h2>Distributed Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Node Count</span>
+        <span class="info-val" id="dist-count">0</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Consensus Hash</span>
+        <span class="info-val" id="dist-hash">—</span>
+      </div>
+      <h3 style="font-size:0.75rem; color:var(--text-secondary); margin:0.5rem 0 0.25rem;">Nodes</h3>
+      <ul class="narrative-list" id="dist-nodes"></ul>
+    </section>
+
+    <!-- Social Panel -->
+    <section class="panel">
+      <h2>Social Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Agent Count</span>
+        <span class="info-val" id="soc-count">0</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Average Trust</span>
+        <span class="info-val" id="soc-trust">0.00</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Cooperation Rate</span>
+        <span class="info-val" id="soc-coop">0.00</span>
+      </div>
+    </section>
+
+    <!-- Stabilizer Panel -->
+    <section class="panel">
+      <h2>Stabilizer Panel</h2>
+      <div class="info-row">
+        <span class="info-key">Last Intervention</span>
+        <span class="info-val" id="stab-intervention">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Attractor Count</span>
+        <span class="info-val" id="stab-attractors">0</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Stability Score</span>
+        <span class="info-val" id="stab-score">1.00</span>
+      </div>
+    </section>
+
+    <!-- Log Stream -->
+    <section class="panel panel-grid-2">
+      <h2>Log Stream</h2>
+      <div class="error-banner" id="error-banner"></div>
+      <div class="log-stream" id="log-stream"></div>
+    </section>
+  </main>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
