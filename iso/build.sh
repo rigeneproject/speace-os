@@ -192,7 +192,6 @@ if [ ! -f "${INITRAMFS}" ]; then
 
     # --- AGGIUNTA: busybox per initramfs (fornisce sh, mount, pivot_root, etc.) ---
     BUSYBOX_BIN="${WORK}/bin/busybox"
-    BUSYBOX_URL="https://busybox.net/downloads/binaries/1.36.1-i686/busybox"
     BUSYBOX_URL_X86_64="https://busybox.net/downloads/binaries/1.36.1-x86_64/busybox"
     mkdir -p "${WORK}/bin" "${WORK}/usr/bin" "${WORK}/sbin" "${WORK}/usr/sbin"
 
@@ -211,8 +210,7 @@ if [ ! -f "${INITRAMFS}" ]; then
     else
         log "initramfs: scarico busybox statico (x86_64)..."
         if command -v curl >/dev/null 2>&1; then
-            curl -fsSL -o "${BUSYBOX_BIN}" "${BUSYBOX_URL_X86_64}" || \
-            curl -fsSL -o "${BUSYBOX_BIN}" "${BUSYBOX_URL}" || true
+            curl -fsSL -o "${BUSYBOX_BIN}" "${BUSYBOX_URL_X86_64}" || true
         elif command -v wget >/dev/null 2>&1; then
             wget -q -O "${BUSYBOX_BIN}" "${BUSYBOX_URL_X86_64}" || true
         fi
@@ -245,6 +243,7 @@ if [ ! -f "${INITRAMFS}" ]; then
 
     # Copia anche qualche utility extra da Alpine rootfs
     if [ -d "${ROOTFS}/lib" ]; then
+        mkdir -p "${WORK}/lib"
         # Copia solo libc e loader dinamico se busybox non è statico
         for lib in ld-musl-x86_64.so.1 libc.musl-x86_64.so.1 libuClibc-*.so.*; do
             find "${ROOTFS}/lib" -name "${lib}" -exec cp {} "${WORK}/lib/" \; 2>/dev/null || true
@@ -255,7 +254,7 @@ if [ ! -f "${INITRAMFS}" ]; then
     find . | cpio -o -H newc 2>/dev/null | gzip -9 > "${INITRAMFS}"
     cd - >/dev/null
     log "initramfs: ${INITRAMFS} ($(du -h "${INITRAMFS}" | cut -f1))"
-    log "initramfs: contenuto: $(cpio -t < <(gunzip -c "${INITRAMFS}") 2>/dev/null | wc -l) file"
+    log "initramfs: contenuto: $(gunzip -c "${INITRAMFS}" | cpio -t 2>/dev/null | wc -l) file"
     rm -rf "${WORK}"
 fi
 

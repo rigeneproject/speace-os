@@ -22,17 +22,17 @@ set timeout=3
 set default=0
 
 menuentry "SPEACE OS — Cognitive Operating System" {
-    linux /boot/bzImage root=/dev/sr0 ro quiet loglevel=3 speace.stage=os-0.1
+    linux /boot/bzImage ro quiet loglevel=3 speace.stage=os-0.1
     initrd /boot/initramfs.cpio.gz
 }
 
 menuentry "SPEACE OS (safe mode — no AI coordinator)" {
-    linux /boot/bzImage root=/dev/sr0 ro quiet loglevel=3 speace.coordinator=off
+    linux /boot/bzImage ro quiet loglevel=3 speace.coordinator=off
     initrd /boot/initramfs.cpio.gz
 }
 
 menuentry "SPEACE OS (verbose boot)" {
-    linux /boot/bzImage root=/dev/sr0 ro loglevel=7
+    linux /boot/bzImage ro loglevel=7
     initrd /boot/initramfs.cpio.gz
 }
 EOF
@@ -51,16 +51,32 @@ tar -czf "${ISODIR}/speace/rootfs.tar.gz" -C "${OUT}" rootfs 2>/dev/null || true
 log "installo GRUB i386-pc nel boot directory"
 if command -v grub-install >/dev/null 2>&1; then
     grub-install --target=i386-pc \
-        --boot-directory="${ISODIR}" \
+        --boot-directory="${ISODIR}/boot" \
         --modules="iso9660 ext2 fat part_msdos part_gpt biosdisk" \
         --install-modules="iso9660 ext2 fat part_msdos part_gpt biosdisk linux acpi normal ls echo test sleep configfile" \
         --no-floppy \
         --recheck \
         "${ISODIR}" 2>&1 | tee -a "${LOGFILE}" || \
-    log "(warn) grub-install BIOS fallita, userò xorriso diretto"
+    log "(warn) grub-install BIOS fallita, assicuro cdboot.img via fallback"
 else
     log "(warn) grub-install non trovato"
 fi
+
+# Assicura che cdboot.img e boot_hybrid.img esistano indipendentemente
+# dal risultato di grub-install (che fallisce su directory, non device).
+# Senza cdboot.img, xorriso non può creare il catalogo El Torito = ISO non avviabile.
+for img in cdboot.img boot_hybrid.img; do
+    if [ ! -f "${ISODIR}/boot/grub/i386-pc/${img}" ]; then
+        for syspath in /usr/lib/grub/i386-pc /usr/lib/grub2/i386-pc; do
+            if [ -f "${syspath}/${img}" ]; then
+                mkdir -p "${ISODIR}/boot/grub/i386-pc"
+                cp "${syspath}/${img}" "${ISODIR}/boot/grub/i386-pc/${img}"
+                log "copiato ${img} da ${syspath} (fallback)"
+                break
+            fi
+        done
+    fi
+done
 
 # ---------------------------------------------------------------- #
 # Installa GRUB per UEFI (x86_64-efi)
@@ -72,8 +88,8 @@ if command -v grub-mkstandalone >/dev/null 2>&1; then
     grub-mkstandalone \
         --format=x86_64-efi \
         --output="${ISODIR}/EFI/BOOT/BOOTX64.EFI" \
-        --install-modules="iso9660 ext2 fat part_gpt efi_networking" \
-        --modules="iso9660 ext2 fat part_gpt efi_networking" \
+        --install-modules="iso9660 ext2 fat part_gpt" \
+        --modules="iso9660 ext2 fat part_gpt" \
         /boot/grub/grub.cfg="${ISODIR}/boot/grub/grub.cfg" \
         2>&1 | tee -a "${LOGFILE}" || \
     log "(warn) grub-mkstandalone fallita, copio bootx64.efi prebuilt"

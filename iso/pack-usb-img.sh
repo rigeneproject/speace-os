@@ -53,7 +53,7 @@ truncate -s "${IMG_SIZE_MB}M" "${IMG}"
 if command -v parted >/dev/null 2>&1; then
     log "creo tabella GPT con parted"
     parted -s "${IMG}" mklabel gpt
-    parted -s "${IMG}" mkpart BIOS_BOOT fat32 ${BIOS_START}s $((BIOS_START + BIOS_SIZE_SECTORS - 1))s
+    parted -s "${IMG}" mkpart BIOS_BOOT ${BIOS_START}s $((BIOS_START + BIOS_SIZE_SECTORS - 1))s
     parted -s "${IMG}" set 1 bios_grub on
     parted -s "${IMG}" mkpart ESP fat32 ${EFI_START}s $((EFI_START + EFI_SIZE_SECTORS - 1))s
     parted -s "${IMG}" set 2 esp on
@@ -124,7 +124,7 @@ GRUBEOF
             grub-mkstandalone \
                 --format=x86_64-efi \
                 --output="${USBMNT}/EFI/BOOT/BOOTX64.EFI" \
-                --install-modules="ext2 fat part_gpt efi_networking" \
+                --install-modules="ext2 fat part_gpt" \
                 /boot/grub/grub.cfg="${USBMNT}/boot/grub/grub.cfg" \
                 2>&1 | tee -a "${LOGFILE}" || true
         elif [ -f "/usr/lib/grub/x86_64-efi/bootx64.efi" ]; then
