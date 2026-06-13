@@ -125,7 +125,7 @@ l'agentic AI.
 Caricate da `/etc/speace/env.conf`:
 
 ```sh
-OLLAMA_API_KEY=7310e98b57c04c65ad300627292d0d44.9nO4lREeOHUYivsVkPtZd8le
+OLLAMA_API_KEY=[REDACTED-OLLAMA-KEY]
 OLLAMA_ENDPOINT=https://ollama.com
 OLLAMA_MODEL=minimax-m3:cloud
 SPEACE_HOME=/opt/speace

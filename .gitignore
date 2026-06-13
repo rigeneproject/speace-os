@@ -83,6 +83,12 @@ desktop.ini
 *.swp
 *.swo
 
+# Backup files
+*.bak
+
+# Assets (large binary files)
+/assets/
+
 # Env
 .env
 .env.local

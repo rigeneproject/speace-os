@@ -1,16 +1,16 @@
 #!/bin/sh
-# init — primo programma eseguito dal kernel (PID 1 del initramfs).
+# init - primo programma eseguito dal kernel (PID 1 del initramfs).
 # Il kernel carica initramfs in RAMFS, esegue questo script come PID 1.
 # Compito: montare proc/sys/dev, trovare e montare il rootfs reale,
 # fare pivot_root, e passare il controllo a /sbin/os_coordinator.
 
 set -eu
 
-# Apre la console per output kernel (se non già aperta)
+# Apre la console per output kernel (se non gia aperta)
 exec < /dev/console > /dev/console 2>&1
 
 echo "=================================================="
-echo " SPEACE OS — initramfs init"
+echo " SPEACE OS - initramfs init"
 echo "=================================================="
 
 # Monta i filesystem virtuali essenziali
@@ -18,57 +18,232 @@ mount -t proc none /proc || true
 mount -t sysfs none /sys || true
 mount -t devtmpfs none /dev || true
 mount -t tmpfs none /run || true
+mount -t tmpfs none /tmp || true
 
 # Popola /dev minimale (se devtmpfs non basta)
 if [ ! -e /dev/console ]; then
     mknod /dev/console c 5 1 2>/dev/null || true
 fi
 
-# Cerca il rootfs reale. Ordine di fallback:
-#   1. root= parametro kernel (es. root=/dev/sda2)
-#   2. /dev/sr0 (CDROM / ISO)
-#   3. /dev/vda (virtio)
-#   4. /dev/sda (USB / SATA)
-ROOT_DEVICE="${ROOT_DEVICE:-}"
-if [ -z "${ROOT_DEVICE}" ]; then
-    for candidate in /dev/sr0 /dev/vda /dev/sda /dev/sdb /dev/nvme0n1; do
-        if [ -b "${candidate}" ]; then
-            ROOT_DEVICE="${candidate}"
-            break
+# Attiva lo scan SCSI per device USB/SATA che arrivano in ritardo
+echo "[init] scan SCSI host..."
+for host in /sys/class/scsi_host/host*/scan; do
+    echo "- - -" > "$host" 2>/dev/null || true
+done
+
+# Helper: elenca tutti i device a blocchi nel sistema
+list_block_devices() {
+    ls /dev/sd* /dev/vd* /dev/nvme* /dev/sr* /dev/mmcblk* /dev/xvd* /dev/hd* 2>/dev/null || true
+}
+
+# Helper: prova a montare per label (indipendentemente dal device)
+try_mount_label() {
+    _label="$1"
+    _dest="$2"
+    if mount -o ro -L "$_label" "$_dest" 2>/dev/null; then
+        echo "[init] montato per LABEL=${_label}"
+        return 0
+    fi
+    return 1
+}
+
+# Helper: prova a montare per UUID
+try_mount_uuid() {
+    _uuid="$1"
+    _dest="$2"
+    if mount -o ro -U "$_uuid" "$_dest" 2>/dev/null; then
+        echo "[init] montato per UUID=${_uuid}"
+        return 0
+    fi
+    return 1
+}
+
+# Helper: tenta tutte le partizioni di un device base
+try_device_partitions() {
+    _base="$1"
+    _dest="$2"
+    _maxpart="${3:-9}"
+    # Prova prima il device nudo (per ISO9660 e simili)
+    if [ -b "${_base}" ]; then
+        if mount -o ro "${_base}" "${_dest}" 2>/dev/null; then
+            echo "[init] montato ${_base} in /newroot"
+            return 0
+        fi
+    fi
+    # Prova le partizioni numerate (sdX1, sdX2, ..., nvme0n1p1, ...)
+    p=1
+    while [ "${p}" -le "${_maxpart}" ]; do
+        _part=""
+        case "${_base}" in
+            *nvme*|*mmcblk*) _part="${_base}p${p}" ;;
+            *)               _part="${_base}${p}" ;;
+        esac
+        if [ -b "${_part}" ]; then
+            if mount -o ro "${_part}" "${_dest}" 2>/dev/null; then
+                echo "[init] montato ${_part} in /newroot"
+                return 0
+            fi
+        fi
+        p=$((p + 1))
+    done
+    return 1
+}
+
+# Helper: prova tutti i device in lista con relative partizioni
+try_all_devices() {
+    _dest="$1"
+    for _base in "$@"; do
+        if try_device_partitions "${_base}" "${_dest}"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Parse kernel cmdline per root=
+ROOT_SPEC=""
+if [ -r /proc/cmdline ]; then
+    for _opt in $(cat /proc/cmdline); do
+        case "${_opt}" in
+            root=*) ROOT_SPEC="${_opt#root=}" ;;
+        esac
+    done
+fi
+
+mkdir -p /newroot
+MOUNTED=0
+
+# === Fase 1: root= da kernel cmdline ===
+if [ -n "${ROOT_SPEC}" ]; then
+    echo "[init] root= specificato: ${ROOT_SPEC}"
+    case "${ROOT_SPEC}" in
+        LABEL=*)
+            _label="${ROOT_SPEC#LABEL=}"
+            if try_mount_label "${_label}" /newroot; then MOUNTED=1; fi
+            ;;
+        UUID=*)
+            _uuid="${ROOT_SPEC#UUID=}"
+            if try_mount_uuid "${_uuid}" /newroot; then MOUNTED=1; fi
+            ;;
+        PARTUUID=*|PARTLABEL=*)
+            if mount -o ro "${ROOT_SPEC}" /newroot 2>/dev/null; then
+                echo "[init] montato ${ROOT_SPEC} in /newroot"; MOUNTED=1
+            fi
+            ;;
+        *)
+            if [ -b "${ROOT_SPEC}" ]; then
+                if mount -o ro "${ROOT_SPEC}" /newroot 2>/dev/null; then
+                    echo "[init] montato ${ROOT_SPEC} in /newroot"; MOUNTED=1
+                fi
+            fi
+            ;;
+    esac
+fi
+
+# === Fase 2: LABEL=SPEACE_ROOT (USB IMG standard) ===
+if [ "${MOUNTED}" -eq 0 ]; then
+    if try_mount_label SPEACE_ROOT /newroot; then
+        MOUNTED=1
+    fi
+fi
+
+# === Fase 3: scan device + partizioni conosciuti ===
+if [ "${MOUNTED}" -eq 0 ]; then
+    echo "[init] scan device conosciuti..."
+    # Lista completa: CDROM, virtio, SATA/USB (sd), NVMe, Xen, MMC
+    if try_all_devices /newroot \
+        /dev/sr0 /dev/sr1 \
+        /dev/vda /dev/vdb /dev/vdc /dev/vdd \
+        /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh \
+        /dev/sdi /dev/sdj /dev/sdk /dev/sdl \
+        /dev/nvme0n1 /dev/nvme0n2 /dev/nvme1n1 /dev/nvme1n2 \
+        /dev/xvda /dev/xvdb \
+        /dev/mmcblk0 /dev/mmcblk1; then
+        MOUNTED=1
+    fi
+fi
+
+# === Fase 4: wait + retry (max 15s per device USB lenti) ===
+if [ "${MOUNTED}" -eq 0 ]; then
+    echo "[init] aspetto device... (max 15s)"
+    i=1
+    while [ "${i}" -le 15 ]; do
+        # Ri-scan SCSI ad ogni iterazione
+        for host in /sys/class/scsi_host/host*/scan; do
+            echo "- - -" > "$host" 2>/dev/null || true
+        done
+        sleep 1
+        # Prova label
+        if try_mount_label SPEACE_ROOT /newroot; then
+            MOUNTED=1; break
+        fi
+        # Prova device + partizioni
+        if try_all_devices /newroot \
+            /dev/sr0 /dev/sr1 \
+            /dev/vda /dev/vdb /dev/vdc /dev/vdd \
+            /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh \
+            /dev/sdi /dev/sdj /dev/sdk /dev/sdl \
+            /dev/nvme0n1 /dev/nvme0n2 /dev/nvme1n1 /dev/nvme1n2 \
+            /dev/xvda /dev/xvdb \
+            /dev/mmcblk0 /dev/mmcblk1; then
+            MOUNTED=1; break
+        fi
+        echo "[init] aspetto device... (${i}/15)"
+        i=$((i + 1))
+    done
+fi
+
+# === Fase 5: fallback wildcard su tutti i block device ===
+if [ "${MOUNTED}" -eq 0 ]; then
+    echo "[init] fallback: scan wildcard di tutti i block device..."
+    # Cerca qualsiasi device /dev/sd* che non abbiamo gia provato
+    for _d in $(list_block_devices); do
+        if [ -b "${_d}" ]; then
+            if mount -o ro "${_d}" /newroot 2>/dev/null; then
+                echo "[init] montato ${_d} in /newroot (wildcard)"
+                MOUNTED=1
+                break
+            fi
+            # Prova anche partizioni
+            case "${_d}" in
+                *nvme*|*mmcblk*)
+                    p=1
+                    while [ "${p}" -le 9 ]; do
+                        _part="${_d}p${p}"
+                        if [ -b "${_part}" ] && mount -o ro "${_part}" /newroot 2>/dev/null; then
+                            echo "[init] montato ${_part} in /newroot (wildcard part)"
+                            MOUNTED=1; break 2
+                        fi
+                        p=$((p + 1))
+                    done ;;
+                sd*|vd*|xv*)
+                    p=1
+                    while [ "${p}" -le 9 ]; do
+                        _part="${_d}${p}"
+                        if [ -b "${_part}" ] && mount -o ro "${_part}" /newroot 2>/dev/null; then
+                            echo "[init] montato ${_part} in /newroot (wildcard part)"
+                            MOUNTED=1; break 2
+                        fi
+                        p=$((p + 1))
+                    done ;;
+            esac
         fi
     done
 fi
 
-echo "[init] rootfs candidate: ${ROOT_DEVICE}"
-
-# Attendi che il device sia pronto (max 10s)
-for i in 1 2 3 4 5 6 7 8 9 10; do
-    if [ -b "${ROOT_DEVICE}" ]; then
-        break
-    fi
-    echo "[init] aspetto ${ROOT_DEVICE}... (${i}/10)"
-    sleep 1
-done
-
-if [ ! -b "${ROOT_DEVICE}" ]; then
-    echo "[init] ERRORE: ${ROOT_DEVICE} non trovato dopo 10s"
-    echo "[init] Dispositivi disponibili:"
-    (ls /dev/sd* /dev/vd* /dev/sr* /dev/nvme* 2>/dev/null || echo "nessuno")
-    echo "[init] cado in shell per debug"
-    exec /bin/sh
-fi
-
-mkdir -p /newroot
-if mount -o ro "${ROOT_DEVICE}" /newroot 2>/dev/null; then
-    echo "[init] montato ${ROOT_DEVICE} in /newroot"
-else
-    echo "[init] ERRORE: impossibile montare ${ROOT_DEVICE}"
+if [ "${MOUNTED}" -eq 0 ]; then
+    echo "[init] ERRORE: nessun rootfs trovato dopo 15s"
+    echo "[init] Dispositivi a blocchi disponibili:"
+    (list_block_devices) 2>/dev/null || echo "  (nessuno)"
+    echo "[init] Contenuto di /dev/disk/:"
+    ls -R /dev/disk/ 2>/dev/null || echo "  (vuoto)"
+    echo "[init] Partition table via /proc/partitions:"
+    cat /proc/partitions 2>/dev/null || echo "  (non disponibile)"
     echo "[init] cado in shell per debug"
     exec /bin/sh
 fi
 
 # Sposta i filesystem virtuali nel nuovo root prima del pivot
-# così il nuovo root li ha subito disponibili
 mount --move /dev /newroot/dev 2>/dev/null || true
 mount --move /proc /newroot/proc 2>/dev/null || true
 mount --move /sys /newroot/sys 2>/dev/null || true
@@ -82,14 +257,23 @@ pivot_root /newroot /newroot/oldroot
 # Smonta i residui dell'initramfs (ormai in /oldroot)
 umount -l /oldroot/dev /oldroot/proc /oldroot/sys /oldroot/run 2>/dev/null || true
 
-# Esegui il vero init: os_coordinator. Se manca, shell di soccorso.
+# Esegui il vero init: os_coordinator. Cerca sia in rootfs (post-pivot) che in initramfs (fallback).
+# Se manca o non e eseguibile, shell di soccorso.
 if [ -x /sbin/os_coordinator ]; then
     echo "[init] consegno il controllo a /sbin/os_coordinator (PID 1 cognitivo)"
     exec /sbin/os_coordinator
+elif [ -x /oldroot/sbin/os_coordinator ]; then
+    echo "[init] /sbin/os_coordinator non trovato in rootfs, uso quello nell'initramfs"
+    exec /oldroot/sbin/os_coordinator
+elif [ -x /oldroot/opt/os_coordinator/coordinator.py ] && [ -x /oldroot/usr/bin/python3 ]; then
+    echo "[init] wrapper mancante, avvio modulo Python direttamente"
+    exec /oldroot/usr/bin/python3 -m os_coordinator
 else
-    echo "[init] WARN: /sbin/os_coordinator non trovato nel rootfs"
+    echo "[init] WARN: /sbin/os_coordinator non trovato nel rootfs ne nell'initramfs"
     echo "[init] Contenuto di /sbin:"
     ls /sbin/ 2>/dev/null || echo "(vuoto)"
+    echo "[init] Contenuto di /oldroot/sbin:"
+    ls /oldroot/sbin/ 2>/dev/null || echo "(vuoto)"
     echo "[init] cado in shell per debug"
     exec /bin/sh
 fi

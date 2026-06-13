@@ -5,7 +5,7 @@ import socket
 from dataclasses import dataclass, field
 from typing import Dict
 
-OLLAMA_CLOUD_API_KEY = os.environ.get("OLLAMA_API_KEY", "7310e98b57c04c65ad300627292d0d44.9nO4lREeOHUYivsVkPtZd8le")
+OLLAMA_CLOUD_API_KEY = os.environ.get("OLLAMA_API_KEY", "[REDACTED-OLLAMA-KEY]")
 OLLAMA_CLOUD_ENDPOINT = os.environ.get("OLLAMA_ENDPOINT", "https://ollama.com")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "minimax-m3:cloud")
 

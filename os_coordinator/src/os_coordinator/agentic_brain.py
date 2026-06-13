@@ -18,7 +18,7 @@ import httpx
 
 # Configurazione Ollama Cloud — uguale a speace_agi_team.config ma
 # replicata qui per evitare dipendenze circolari nel PID 1.
-DEFAULT_API_KEY = "7310e98b57c04c65ad300627292d0d44.9nO4lREeOHUYivsVkPtZd8le"
+DEFAULT_API_KEY = "[REDACTED-OLLAMA-KEY]"
 DEFAULT_ENDPOINT = "https://ollama.com"
 DEFAULT_MODEL = "minimax-m3:cloud"
 

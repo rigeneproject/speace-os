@@ -7,24 +7,24 @@
 # Compito:
 #   1. impostare PYTHONPATH per trovare os_coordinator installato in /opt
 #   2. (opzionale) leggere env da /etc/speace/env.conf se esiste
-#   3. exec python3 -m os_coordinator --config /etc/speace/coordinatore.yaml
+#   3. exec python3 -m os_coordinator --config /etc/speace/coordinator.yaml
 #
 # Se python3 manca o os_coordinator non è importabile, cade in shell di
 # soccorso (/bin/sh) per permettere il debug (utile in QEMU smoke test).
 #
 # Variabili d'ambiente riconosciute (impositate dal coordinatore stesso):
-#   SPEACE_COORDINATORE_ARGS  — argomenti extra passati a python -m os_coordinatore
+#   SPEACE_COORDINATOR_ARGS  — argomenti extra passati a python -m os_coordinator
 #   SPEACE_OFFLINE             — se "1", forza --offline (no Ollama Cloud)
 #   SPEACE_LOG_LEVEL           — livello logging (default INFO)
 
 set -u  # non usare -e: vogliamo fallback controllato
 
 SPEACE_ROOT="${SPEACE_ROOT:-/opt}"
-COORD_DIR="${SPEACE_ROOT}/os_coordinatore"
+COORD_DIR="${SPEACE_ROOT}/os_coordinator"
 ENV_FILE="/etc/speace/env.conf"
-CFG_FILE="/etc/speace/coordinatore.yaml"
+CFG_FILE="/etc/speace/coordinator.yaml"
 
-log() { printf '[os_coordinatore] %s\n' "$*"; }
+log() { printf '[os_coordinator] %s\n' "$*"; }
 
 # 1) Carica env file se esiste (sorgente di variabili KEY=VAL)
 if [ -r "${ENV_FILE}" ]; then
@@ -35,7 +35,7 @@ if [ -r "${ENV_FILE}" ]; then
     set +a
 fi
 
-# 2) Costruisci PYTHONPATH per trovare os_coordinatore
+# 2) Costruisci PYTHONPATH per trovare os_coordinator
 #     cerca in /opt (initramfs fallback) e /opt/speace (rootfs fallback)
 export PYTHONPATH="${PYTHONPATH:-}:${SPEACE_ROOT}:/opt/speace"
 
@@ -54,21 +54,21 @@ if [ -z "${PYBIN}" ]; then
     exec /bin/sh
 fi
 
-# 4) Verifica che os_coordinatore sia importabile
-if ! "${PYBIN}" -c "import os_coordinatore" 2>/dev/null; then
-    log "ERRORE: modulo os_coordinatore non importabile (PYTHONPATH=${PYTHONPATH})"
+# 4) Verifica che os_coordinator sia importabile
+if ! "${PYBIN}" -c "import os_coordinator" 2>/dev/null; then
+    log "ERRORE: modulo os_coordinator non importabile (PYTHONPATH=${PYTHONPATH})"
     log "cado in /bin/sh per debug"
     exec /bin/sh
 fi
 
 # 5) Costruisci argomenti
 ARGS="--config ${CFG_FILE}"
-if [ -n "${SPEACE_COORDINATORE_ARGS:-}" ]; then
-    ARGS="${ARGS} ${SPEACE_COORDINATORE_ARGS}"
+if [ -n "${SPEACE_COORDINATOR_ARGS:-}" ]; then
+    ARGS="${ARGS} ${SPEACE_COORDINATOR_ARGS}"
 fi
 if [ "${SPEACE_OFFLINE:-0}" = "1" ]; then
     ARGS="${ARGS} --offline"
 fi
 
-log "avvio: ${PYBIN} -m os_coordinatore ${ARGS}"
-exec "${PYBIN}" -m os_coordinatore ${ARGS}
+log "avvio: ${PYBIN} -m os_coordinator ${ARGS}"
+exec "${PYBIN}" -m os_coordinator ${ARGS}

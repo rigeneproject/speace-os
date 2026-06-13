@@ -45,11 +45,17 @@ if [ -f "${WRAPPER}" ]; then
     else
         fail "wrapper non referenzia python3"
     fi
-    # Verifica che esegua il modulo os_coordinator
-    if grep -q "os_coordinator" "${WRAPPER}"; then
+    # Verifica che esegua il modulo os_coordinator (non os_coordinatore!)
+    if grep -qw "os_coordinator" "${WRAPPER}"; then
         ok "wrapper esegue -m os_coordinator"
     else
         fail "wrapper non esegue -m os_coordinator"
+    fi
+    # Verifica che NON usi il nome italiano (regressione)
+    if grep -q "os_coordinatore" "${WRAPPER}"; then
+        fail "wrapper usa 'os_coordinatore' (Italiano) invece di 'os_coordinator' (English)"
+    else
+        ok "wrapper non usa 'os_coordinatore' (regressione check)"
     fi
 else
     fail "wrapper mancante: ${WRAPPER}"

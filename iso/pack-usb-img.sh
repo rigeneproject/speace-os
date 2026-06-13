@@ -1,18 +1,8 @@
 #!/bin/sh
-# pack-usb-img.sh — genera immagine disco raw per USB (UEFI + Legacy BIOS).
+# pack-usb-img.sh - genera immagine disco raw per USB (UEFI + Legacy BIOS).
 # Output: out/speace-os-${VERSION}.img
-#
-# A differenza della ISO (che usa El Torito e si scrive bit-per-bit solo
-# in modalità Rufus DD Image), questo .img è un disco vero con:
-#   - tabella partizioni GPT + BIOS boot partition (per GRUB BIOS)
-#   - partizione EFI (FAT32 64MB) con GRUB EFI e kernel/initramfs
-#   - partizione rootfs (ext4 ~500MB) con il rootfs Alpine completo
-#   - GRUB installato nel MBR + core.img nel BIOS boot gap
-#
-# La USB scritta con Rufus DD mode / balenaEtcher / `dd` parte sia in
-# UEFI che in Legacy BIOS senza dover configurare Secure Boot/CD-mode.
 
-set -u
+set -eu
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${HERE}/.." && pwd)"
@@ -21,80 +11,71 @@ VERSION="$(cat "${ROOT}/VERSION")"
 IMG="${OUT}/speace-os-${VERSION}.img"
 LOGFILE="${OUT}/usb-img-build.log"
 
-if [ ! -d "${OUT}/rootfs/bin" ]; then
-    "${HERE}/build.sh"
+if [ ! -f "${OUT}/rootfs/etc/speace/coordinator.yaml" ]; then
+    log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "${LOGFILE}"; }
+    log "rootfs non pronto, eseguo build.sh"
+    "${HERE}/build.sh" >/dev/null 2>&1 || true
 fi
 
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "${LOGFILE}"; }
 
-# ------------------------------------------------------------ #
-# Layout:
-#   Sector 0        : protective MBR + GRUB BIOS (1MB = 2048 settori)
-#   Sector 1..33    : GPT header + entries
-#   Sector 2048..   : partizione EFI (64MB = 131072 settori)
-#   Sector 133120.. : partizione rootfs (~500MB = 1024000 settori)
-# ------------------------------------------------------------ #
+do_mount() {
+    if mount "$@" 2>/dev/null; then return 0; fi
+    if sudo -n mount "$@" 2>/dev/null; then return 0; fi
+    return 1
+}
+do_umount() {
+    if umount "$@" 2>/dev/null; then return 0; fi
+    if sudo -n umount "$@" 2>/dev/null; then return 0; fi
+    return 1
+}
 
-BIOS_START=64
-BIOS_SIZE_SECTORS=$((1 * 1024 * 1024 / 512))      # 1MB per GRUB BIOS
-EFI_START=$((BIOS_START + BIOS_SIZE_SECTORS))
-EFI_SIZE_SECTORS=$((64 * 1024 * 1024 / 512))      # 64MB
-ROOTFS_START=$((EFI_START + EFI_SIZE_SECTORS))
-ROOTFS_SIZE_MB=500
-ROOTFS_SIZE_SECTORS=$((ROOTFS_SIZE_MB * 1024 * 1024 / 512))
-IMG_SIZE_MB=$(( (ROOTFS_START + ROOTFS_SIZE_SECTORS) * 512 / 1024 / 1024 + 1 ))
+WORK="/tmp/speace-usb-img"
+rm -rf "${WORK}"
+mkdir -p "${WORK}"
 
-log "creo disco raw ${IMG} (${IMG_SIZE_MB} MB)"
-truncate -s "${IMG_SIZE_MB}M" "${IMG}"
+IMG_TMP="${WORK}/disk.img"
+ESP_TMP="${WORK}/esp.img"
+ROOTFS_TMP="${WORK}/rootfs.img"
+ROOTFS_MNT="${WORK}/rootfs_mnt"
+mkdir -p "${ROOTFS_MNT}"
 
-# ------------------------------------------------------------ #
-# Crea tabella GPT con parted
-# ------------------------------------------------------------ #
-if command -v parted >/dev/null 2>&1; then
-    log "creo tabella GPT con parted"
-    parted -s "${IMG}" mklabel gpt
-    parted -s "${IMG}" mkpart BIOS_BOOT ${BIOS_START}s $((BIOS_START + BIOS_SIZE_SECTORS - 1))s
-    parted -s "${IMG}" set 1 bios_grub on
-    parted -s "${IMG}" mkpart ESP fat32 ${EFI_START}s $((EFI_START + EFI_SIZE_SECTORS - 1))s
-    parted -s "${IMG}" set 2 esp on
-    parted -s "${IMG}" mkpart ROOTFS ext4 ${ROOTFS_START}s $((ROOTFS_START + ROOTFS_SIZE_SECTORS - 1))s
+MIBSIZE=$((1024 * 1024))
+SECSIZE=512
+SECPERMB=$((MIBSIZE / SECSIZE))
+BIOS_MB=1
+EFI_MB=64
+ROOTFS_MB=500
+IMG_MB=$((2 + BIOS_MB + EFI_MB + ROOTFS_MB))
 
-    # Loop-mount delle partizioni
-    LOOPDEV=$(losetup --find --show --partscan "${IMG}" 2>/dev/null || echo "")
-    if [ -n "${LOOPDEV}" ]; then
-        trap "losetup -d ${LOOPDEV} 2>/dev/null || true" EXIT
+log "creo disco raw ${IMG_TMP} (${IMG_MB} MB)"
+truncate -s "${IMG_MB}M" "${IMG_TMP}"
 
-        # Aspetta che i device partiscano (max 5s)
-        for i in 1 2 3 4 5; do
-            if [ -b "${LOOPDEV}p1" ] && [ -b "${LOOPDEV}p2" ] && [ -b "${LOOPDEV}p3" ]; then break; fi
-            sleep 1
-        done
+log "creo tabella GPT con parted (allineamento 1 MiB)"
+parted -s -a optimal "${IMG_TMP}" mklabel gpt
+parted -s -a optimal "${IMG_TMP}" mkpart BIOS_BOOT 1MiB $((1 + BIOS_MB))MiB
+parted -s "${IMG_TMP}" set 1 bios_grub on
+parted -s -a optimal "${IMG_TMP}" mkpart ESP fat32 $((1 + BIOS_MB))MiB $((1 + BIOS_MB + EFI_MB))MiB
+parted -s "${IMG_TMP}" set 2 esp on
+parted -s -a optimal "${IMG_TMP}" mkpart ROOTFS ext4 $((1 + BIOS_MB + EFI_MB))MiB $((1 + BIOS_MB + EFI_MB + ROOTFS_MB))MiB
 
-        # ---- Partizione EFI: FAT32 con GRUB EFI + kernel + initramfs ----
-        log "formato partizione EFI (FAT32)"
-        mkfs.fat -F32 -n SPEACE_EFI "${LOOPDEV}p2" >/dev/null 2>&1
-        USBMNT="$(mktemp -d)"
-        mount "${LOOPDEV}p2" "${USBMNT}"
+EFI_START_MIB=$((1 + BIOS_MB))
+ROOTFS_START_MIB=$((1 + BIOS_MB + EFI_MB))
+EFI_SECTORS=$((EFI_MB * SECPERMB))
+ROOTFS_SECTORS=$((ROOTFS_MB * SECPERMB))
+log "estraggo partizioni come file in ${WORK}"
+dd if="${IMG_TMP}" of="${ESP_TMP}" bs=512 skip=$((EFI_START_MIB * SECPERMB)) count=${EFI_SECTORS} status=none
+dd if="${IMG_TMP}" of="${ROOTFS_TMP}" bs=512 skip=$((ROOTFS_START_MIB * SECPERMB)) count=${ROOTFS_SECTORS} status=none
 
-        # ---- GRUB BIOS core.img installato nel MBR + BIOS boot partition ----
-        # GRUB scrive boot.img nel MBR, core.img nella BIOS boot partition (p1),
-        # e i moduli in USBMNT/boot/grub
-        log "installo GRUB i386-pc nel MBR + BIOS boot partition"
-        if command -v grub-install >/dev/null 2>&1; then
-            mkdir -p "${USBMNT}/boot/grub"
-            grub-install --target=i386-pc \
-                --boot-directory="${USBMNT}/boot" \
-                --modules="ext2 fat part_msdos part_gpt biosdisk" \
-                --install-modules="ext2 fat part_msdos part_gpt biosdisk linux acpi normal ls echo test sleep configfile" \
-                "${LOOPDEV}" 2>&1 | tee -a "${LOGFILE}" || \
-            log "(warn) grub-install BIOS fallita — solo boot UEFI"
-        else
-            log "(warn) grub-install non trovato — solo UEFI"
-        fi
+# ---- ESP FAT32 con mtools (no mount) ----
+log "formato ESP FAT32 (${EFI_MB}MB)"
+mkfs.fat -F32 -n SPEACE_EFI "${ESP_TMP}" >/dev/null
 
-        # grub.cfg per USB (scritto prima di grub-mkstandalone per embedding)
-        mkdir -p "${USBMNT}/boot/grub"
-        cat > "${USBMNT}/boot/grub/grub.cfg" <<'GRUBEOF'
+GRUB_TMP="${WORK}/grub_esp"
+rm -rf "${GRUB_TMP}"
+mkdir -p "${GRUB_TMP}/boot/grub" "${GRUB_TMP}/EFI/BOOT" "${GRUB_TMP}/speace"
+
+cat > "${GRUB_TMP}/boot/grub/grub.cfg" <<'GRUBEOF'
 set timeout=3
 set default=0
 
@@ -117,64 +98,137 @@ menuentry "SPEACE OS (verbose boot)" {
 }
 GRUBEOF
 
-        # ---- GRUB EFI bootx64.efi (usa il grub.cfg appena scritto) ----
-        mkdir -p "${USBMNT}/EFI/BOOT"
-        if command -v grub-mkstandalone >/dev/null 2>&1; then
-            log "creo BOOTX64.EFI con grub-mkstandalone"
-            grub-mkstandalone \
-                --format=x86_64-efi \
-                --output="${USBMNT}/EFI/BOOT/BOOTX64.EFI" \
-                --install-modules="ext2 fat part_gpt" \
-                /boot/grub/grub.cfg="${USBMNT}/boot/grub/grub.cfg" \
-                2>&1 | tee -a "${LOGFILE}" || true
-        elif [ -f "/usr/lib/grub/x86_64-efi/bootx64.efi" ]; then
-            log "copio bootx64.efi prebuilt"
-            cp "/usr/lib/grub/x86_64-efi/bootx64.efi" "${USBMNT}/EFI/BOOT/BOOTX64.EFI"
-        else
-            log "(warn) bootx64.efi non disponibile — UEFI non supportato"
-        fi
+cp "${OUT}/kernel/bzImage" "${GRUB_TMP}/boot/bzImage"
+cp "${OUT}/initramfs.cpio.gz" "${GRUB_TMP}/boot/initramfs.cpio.gz"
+if [ -f /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed ]; then
+    cp /usr/lib/grub/x86_64-efi-signed/grubx64.efi.signed "${GRUB_TMP}/EFI/BOOT/BOOTX64.EFI"
+elif [ -f /usr/lib/grub/x86_64-efi/bootx64.efi ]; then
+    cp /usr/lib/grub/x86_64-efi/bootx64.efi "${GRUB_TMP}/EFI/BOOT/BOOTX64.EFI"
+fi
+[ -f "${OUT}/rootfs.tar.gz" ] && cp "${OUT}/rootfs.tar.gz" "${GRUB_TMP}/speace/rootfs.tar.gz"
 
-        # Kernel + initramfs nella partizione EFI
-        cp "${OUT}/kernel/bzImage" "${USBMNT}/boot/bzImage"
-        cp "${OUT}/initramfs.cpio.gz" "${USBMNT}/boot/initramfs.cpio.gz"
+log "popolo ESP con mtools"
+mcopy -i "${ESP_TMP}" -s -Q -p "${GRUB_TMP}"/* ::/
+rm -rf "${GRUB_TMP}"
 
-        umount "${USBMNT}"
-        rmdir "${USBMNT}"
+# ---- ROOTFS ext4 ----
+log "formato ROOTFS ext4 (${ROOTFS_MB}MB)"
+mkfs.ext4 -L SPEACE_ROOT -F "${ROOTFS_TMP}" >/dev/null
 
-        # ---- Rootfs partition: ext4 con il rootfs ----
-        log "formato partizione rootfs (ext4 ${ROOTFS_SIZE_MB}MB)"
-        mkfs.ext4 -L SPEACE_ROOT -F "${LOOPDEV}p3" >/dev/null 2>&1
-        ROOTFS_MNT="$(mktemp -d)"
-        mount "${LOOPDEV}p3" "${ROOTFS_MNT}"
+# Copia overlay in /tmp prima
+ROOTFS_OVERLAY="${WORK}/overlay"
+rm -rf "${ROOTFS_OVERLAY}"
+mkdir -p "${ROOTFS_OVERLAY}"
+log "copio rootfs overlay in ${ROOTFS_OVERLAY}"
+(cd "${OUT}/rootfs" && tar -cf - .) | (cd "${ROOTFS_OVERLAY}" && tar -xf -)
+log "overlay copiato: $(find "${ROOTFS_OVERLAY}" -type f | wc -l) file"
 
-        log "copio rootfs nella partizione"
-        cp -a "${OUT}/rootfs/." "${ROOTFS_MNT}/"
-
-        # Kernel + initramfs anche nel rootfs (fallback)
-        mkdir -p "${ROOTFS_MNT}/boot"
-        cp "${OUT}/kernel/bzImage" "${ROOTFS_MNT}/boot/bzImage"
-        cp "${OUT}/initramfs.cpio.gz" "${ROOTFS_MNT}/boot/initramfs.cpio.gz"
-
-        umount "${ROOTFS_MNT}"
-        rmdir "${ROOTFS_MNT}"
-
-        # Smonta loop device
-        losetup -d "${LOOPDEV}"
-        trap - EXIT
-
-        log "img scritto: ${IMG} ($(du -h "${IMG}" | cut -f1))"
-        log "Per USB: Rufus DD mode, balenaEtcher, oppure:"
-        log "  sudo dd if=${IMG} of=/dev/sdX bs=4M status=progress conv=fdatasync"
-        exit 0
+# Popola la partizione con sudo (mount -o loop ha bisogno di root)
+ROOTFS_POPULATED=0
+if do_mount -o loop "${ROOTFS_TMP}" "${ROOTFS_MNT}" 2>/dev/null; then
+    log "rootfs montato, popolo con sudo"
+    if sudo -n sh -c "rm -rf '${ROOTFS_MNT}/*' '${ROOTFS_MNT}/.*' 2>/dev/null; cp -a '${ROOTFS_OVERLAY}/.' '${ROOTFS_MNT}/'" 2>&1 | tee -a "${LOGFILE}"; then
+        ROOTFS_POPULATED=1
+        log "overlay copiato in rootfs_mnt"
     else
-        log "(warn) losetup non disponibile, fallback a dd"
+        log "(warn) sudo cp fallita"
+    fi
+    sync
+    do_umount "${ROOTFS_MNT}"
+fi
+
+if [ "${ROOTFS_POPULATED}" = "0" ]; then
+    log "(warn) rootfs non popolato (mount fallito). Eseguire in Linux nativo."
+fi
+
+# Riscrivi le partizioni nell'immagine
+log "aggiorno partizioni nell'immagine"
+dd if="${ESP_TMP}" of="${IMG_TMP}" bs=512 seek=$((EFI_START_MIB * SECPERMB)) count=${EFI_SECTORS} conv=notrunc status=none
+dd if="${ROOTFS_TMP}" of="${IMG_TMP}" bs=512 seek=$((ROOTFS_START_MIB * SECPERMB)) count=${ROOTFS_SECTORS} conv=notrunc status=none
+
+# ---- GRUB BIOS installato nel MBR ----
+log "installo GRUB i386-pc nell'MBR"
+GRUB_BIOS_OK=0
+if command -v grub-install >/dev/null 2>&1; then
+    GRUB_BOOT="${WORK}/grub-bios-boot"
+    rm -rf "${GRUB_BOOT}"
+    mkdir -p "${GRUB_BOOT}"
+    if grub-install --target=i386-pc \
+        --boot-directory="${GRUB_BOOT}" \
+        --modules="ext2 fat part_msdos part_gpt biosdisk" \
+        --install-modules="ext2 fat part_msdos part_gpt biosdisk linux acpi normal ls echo test sleep configfile" \
+        "${IMG_TMP}" 2>&1 | tee -a "${LOGFILE}"; then
+        GRUB_BIOS_OK=1
+        log "GRUB BIOS installato in MBR (grub-install)"
     fi
 fi
 
-# Fallback: img semplificato
-log "(fallback) creo img semplificato (rootfs come file)"
-RAW="${OUT}/speace-os-${VERSION}-fallback.img"
-truncate -s 100M "${RAW}"
-mkfs.fat -F32 -n SPEACE "${RAW}" >/dev/null 2>&1
-mv "${RAW}" "${IMG}"
-echo "[pack-usb-img] (warn) img fallback 100M: ${IMG}"
+if [ "${GRUB_BIOS_OK}" = "0" ]; then
+    log "(warn) grub-install fallita, provo install manuale con grub-mkimage + dd..."
+    if command -v grub-mkimage >/dev/null 2>&1; then
+        # Crea core.img per GPT + filesystem tipici
+        GRUB_MODULES="ext2 fat part_msdos part_gpt biosdisk ls echo test sleep configfile linux normal acpi"
+        CORE_IMG="${WORK}/core.img"
+        if grub-mkimage -O i386-pc -o "${CORE_IMG}" ${GRUB_MODULES} 2>&1 | tee -a "${LOGFILE}"; then
+            # La BIOS_BOOT partition (partizione 1) inizia a settore 2048 (1MiB)
+            # GRUB boot code va nei primi 440 byte del MBR
+            # core.img va subito dopo (sector 1-2047) ma su GPT i primi 34 settori
+            # sono riservati, quindi core.img si scrive dal settore 34 in avanti
+            # (contenuto nella partition 1, bios_grub)
+            BIOS_PART_OFFSET=$((1 * MIBSIZE))  # 1 MiB
+            BIOS_PART_SIZE=$((BIOS_MB * MIBSIZE))  # 1 MiB
+            CORE_IMG_SIZE=$(stat -c%s "${CORE_IMG}" 2>/dev/null || wc -c < "${CORE_IMG}")
+            if [ "${CORE_IMG_SIZE}" -le "${BIOS_PART_SIZE}" ]; then
+                # Scrivi GRUB MBR boot code (stage1) - primo sector
+                if [ -f /usr/lib/grub/i386-pc/boot.img ]; then
+                    dd if=/usr/lib/grub/i386-pc/boot.img of="${IMG_TMP}" bs=440 count=1 conv=notrunc status=none 2>/dev/null && \
+                    log "  GRUB stage1 (boot.img) scritto in MBR" || \
+                    log "  (warn) boot.img non scritto"
+                fi
+                # Scrivi core.img nella BIOS_BOOT partition (offset 1MiB)
+                dd if="${CORE_IMG}" of="${IMG_TMP}" bs=512 seek=$((BIOS_PART_OFFSET / 512)) conv=notrunc status=none 2>/dev/null && {
+                    GRUB_BIOS_OK=1
+                    log "GRUB BIOS installato manualmente (core.img + MBR)"
+                } || log "  (warn) core.img non scritto"
+                # Marca il disco come bootabile nel MBR
+                printf '\x55\xAA' | dd of="${IMG_TMP}" bs=1 seek=510 conv=notrunc status=none 2>/dev/null || true
+            else
+                log "  (warn) core.img (${CORE_IMG_SIZE} bytes) troppo grande per BIOS_BOOT partition (${BIOS_PART_SIZE} bytes)"
+            fi
+        else
+            log "  (warn) grub-mkimage fallita"
+        fi
+    else
+        log "  (warn) grub-mkimage non disponibile, BIOS boot non funzionera'"
+    fi
+fi
+
+if [ "${GRUB_BIOS_OK}" = "0" ]; then
+    log "WARN: GRUB BIOS (Legacy) non installato. Funziona solo UEFI."
+fi
+
+# ---- Validazione finale ----
+log "=== validazione immagine finale ==="
+log "  file: $(ls -lh "${IMG_TMP}" | awk '{print $5}')"
+# Verifica presenza partizioni con sfdisk
+if command -v sfdisk >/dev/null 2>&1; then
+    sfdisk -l "${IMG_TMP}" 2>/dev/null | while read -r line; do log "  $line"; done
+elif command -v parted >/dev/null 2>&1; then
+    parted -s "${IMG_TMP}" print 2>/dev/null | while read -r line; do log "  $line"; done
+fi
+# Verifica che ESP contenga i file EFI
+if command -v mdir >/dev/null 2>&1; then
+    log "  contenuto ESP:"
+    mdir -i "${IMG_TMP}@@$((EFI_START_MIB * MIBSIZE))" -/ 2>/dev/null | while read -r line; do log "    $line"; done || true
+fi
+
+# Sposta immagine finale in out/
+log "sposto immagine finale in ${IMG}"
+[ -f "${IMG}" ] && mv "${IMG}" "${IMG}.bak.$(date +%s)" 2>/dev/null || rm -f "${IMG}"
+cp "${IMG_TMP}" "${IMG}"
+log "img scritto: ${IMG} ($(du -h "${IMG}" | cut -f1))"
+log "Per USB: usare DD mode (raw) NON ISO mode."
+log "  Rufus: selezionare 'DD Image' mode"
+log "  balenaEtcher: funziona direttamente"
+log "  Linux: sudo dd if=${IMG} of=/dev/sdX bs=4M status=progress conv=fdatasync"
+log "  Verificare che il BIOS sia impostato su UEFI (con Secure Boot disattivato) o Legacy."

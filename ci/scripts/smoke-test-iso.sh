@@ -55,8 +55,12 @@ cp "${LOG}" smoke-test.log
 # QEMU è probabilmente ancora in esecuzione; lascialo terminare o killalo
 kill -9 "${QEMU_PID}" 2>/dev/null || true
 
-# Non falliamo in modo duro: in CI questo è advisory.
-# Le distro recenti potrebbero non emettere il banner via console seriale
-# in tempo, oppure lo fanno solo in tty0.
-echo "[smoke-test] END (advisory, non hard-fail)"
-exit 0
+# Se SPEACE_SMOKE_ADVISORY=1, non fallire in modo duro (utile in CI
+# durante stabilizzazione del boot). Altrimenti, fallisci.
+if [ "${SPEACE_SMOKE_ADVISORY:-0}" = "1" ]; then
+    echo "[smoke-test] END (advisory mode, non hard-fail)"
+    exit 0
+else
+    echo "[smoke-test] FAIL: banner 'SPEACE OS' non trovato"
+    exit 1
+fi

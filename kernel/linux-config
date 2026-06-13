@@ -43,6 +43,24 @@ CONFIG_SERIAL_8250_CONSOLE=y
 # Bus support
 CONFIG_PCI=y
 CONFIG_PCI_MSI=y
+CONFIG_PCIEPORTBUS=y     # PCIe port driver (essenziale per hardware moderno)
+CONFIG_PCIE_ASPM=y       # PCIe Active State Power Management
+CONFIG_PCI_ATS=y         # PCIe Address Translation Services
+CONFIG_PCI_IOV=y         # PCIe SR-IOV (comune su chipset moderni)
+CONFIG_PCI_PRI=y         # PCIe Page Request Interface
+CONFIG_PCI_PASID=y       # PCIe Process Address Space ID
+
+# Networking (necessario per Ollama Cloud AI via httpx)
+CONFIG_NET=y
+CONFIG_INET=y
+CONFIG_PACKET=y
+CONFIG_UNIX=y
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=y
+CONFIG_NET_KEY=y
+CONFIG_INET_DIAG=y
+CONFIG_TCP_DIAG=y
+CONFIG_IPV6=y
 
 # Executable file formats
 CONFIG_BINFMT_ELF=y
@@ -54,12 +72,22 @@ CONFIG_BLK_DEV_SD=y      # /dev/sda, /dev/sdb etc.
 CONFIG_BLK_DEV_SR=y      # /dev/sr0 (CD-ROM)
 CONFIG_SR_DEV_IOCTL=y
 CONFIG_CHR_DEV_SG=y
+CONFIG_SCSI_SCAN_ASYNC=y # scan asincrono per device USB lenti
+
+# NVMe (SSD moderni, sempre più comuni su PC recenti)
+CONFIG_NVME_CORE=y
+CONFIG_BLK_DEV_NVME=y
+CONFIG_NVME_PCI=y        # NVMe via PCIe (la stragrande maggioranza)
+CONFIG_NVME_MULTIPATH=y  # multipath per setup enterprise/raid
 
 # Driver base (no GPU, no wireless, no bluetooth, no sound)
 CONFIG_ATA=y
 CONFIG_ATA_GENERIC=y
-CONFIG_ATA_PIIX=y
-CONFIG_SATA_AHCI=y
+CONFIG_ATA_PIIX=y        # Intel PIIX/ICH
+CONFIG_SATA_AHCI=y       # AHCI standard
+CONFIG_SATA_INTEL_COMBINED=y  # Intel combined mode
+CONFIG_ATA_SFF=y         # Required for legacy ATA controllers
+CONFIG_ATA_BMDMA=y       # Bus master DMA for ATA
 CONFIG_E1000=y
 CONFIG_E1000E=y
 CONFIG_R8169=y
@@ -68,9 +96,12 @@ CONFIG_R8169=y
 CONFIG_USB=y
 CONFIG_USB_SUPPORT=y
 CONFIG_USB_XHCI_HCD=y    # USB 3.0
+CONFIG_USB_XHCI_PCI=y    # xHCI su PCIe
 CONFIG_USB_EHCI_HCD=y    # USB 2.0
 CONFIG_USB_OHCI_HCD=y    # USB 1.1 (fallback)
-CONFIG_USB_STORAGE=y     # USB mass storage
+CONFIG_USB_STORAGE=y     # USB mass storage (Bulk-Only Transport)
+CONFIG_USB_UAS=y         # USB Attached SCSI (UAS) — molti controller USB 3.0 moderni
+CONFIG_USB_STORAGE_DEBUG=n
 
 # VirtIO (per QEMU/KVM)
 CONFIG_VIRTIO=y
